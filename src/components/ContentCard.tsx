@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 
 interface ContentCardProps {
   content: {
-    id: number;
+    id: string; // Changed from number to string to match UUID from database
     title: string;
     author: string;
     category: string;
