@@ -9,7 +9,218 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      episodes: {
+        Row: {
+          audio_url: string
+          created_at: string | null
+          description: string | null
+          duration_seconds: number | null
+          episode_number: number
+          id: string
+          is_premium: boolean | null
+          series_id: string | null
+          title: string
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          episode_number: number
+          id?: string
+          is_premium?: boolean | null
+          series_id?: string | null
+          title: string
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          episode_number?: number
+          id?: string
+          is_premium?: boolean | null
+          series_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "episodes_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listening_progress: {
+        Row: {
+          completed: boolean | null
+          episode_id: string | null
+          id: string
+          last_listened_at: string | null
+          progress_seconds: number | null
+          user_id: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          episode_id?: string | null
+          id?: string
+          last_listened_at?: string | null
+          progress_seconds?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          episode_id?: string | null
+          id?: string
+          last_listened_at?: string | null
+          progress_seconds?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listening_progress_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          subscription_tier: string | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          subscription_tier?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          subscription_tier?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      series: {
+        Row: {
+          author: string
+          category_id: string | null
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          is_premium: boolean | null
+          title: string
+          total_episodes: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          author: string
+          category_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_premium?: boolean | null
+          title: string
+          total_episodes?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string
+          category_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_premium?: boolean | null
+          title?: string
+          total_episodes?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "series_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_subscriptions: {
+        Row: {
+          created_at: string | null
+          id: string
+          series_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          series_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          series_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
