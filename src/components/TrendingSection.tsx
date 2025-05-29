@@ -1,5 +1,5 @@
 
-import { TrendingUp, Fire } from "lucide-react";
+import { TrendingUp, Flame } from "lucide-react";
 import ContentCard from "@/components/ContentCard";
 
 interface TrendingSectionProps {
@@ -15,7 +15,7 @@ const TrendingSection = ({ trendingContent, onPlay, currentlyPlaying }: Trending
     <section className="container mx-auto px-8 mb-20">
       <div className="text-center mb-16">
         <div className="inline-flex items-center space-x-3 mb-6 glass-morphism px-6 py-3 rounded-full">
-          <Fire className="h-5 w-5 text-orange-500 animate-pulse" />
+          <Flame className="h-5 w-5 text-orange-500 animate-pulse" />
           <span className="text-lg font-medium text-muted-foreground">Hot Content</span>
         </div>
         <div className="flex items-center justify-center space-x-4 mb-4">
