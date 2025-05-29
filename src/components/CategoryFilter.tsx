@@ -9,7 +9,7 @@ interface CategoryFilterProps {
 
 const CategoryFilter = ({ categories, selectedCategory, onCategoryChange }: CategoryFilterProps) => {
   return (
-    <div className="flex flex-wrap gap-2 justify-center">
+    <div className="flex flex-wrap gap-2 justify-center animate-fade-in">
       {categories.map((category) => (
         <Button
           key={category}
@@ -18,9 +18,9 @@ const CategoryFilter = ({ categories, selectedCategory, onCategoryChange }: Cate
           onClick={() => onCategoryChange(category)}
           className={`${
             selectedCategory === category
-              ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-              : "border-white/20 text-white hover:bg-white/10"
-          } transition-all duration-300`}
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "border-border hover:bg-accent hover:text-accent-foreground"
+          } transition-all duration-200 font-medium px-4 py-2`}
         >
           {category}
         </Button>
