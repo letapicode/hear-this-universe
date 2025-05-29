@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import ContentLibrary from "@/components/ContentLibrary";
 import TrendingSection from "@/components/TrendingSection";
+import LuxuryParticles from "@/components/LuxuryParticles";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories, useSeries } from "@/hooks/useContentData";
 
@@ -30,8 +31,12 @@ const Index = () => {
 
   if (authLoading || categoriesLoading || seriesLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-foreground text-xl font-medium">Loading...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
+        <LuxuryParticles />
+        <div className="glass-morphism p-12 rounded-3xl text-center animate-pulse">
+          <div className="luxury-gradient w-16 h-16 rounded-full mx-auto mb-6 animate-glow"></div>
+          <div className="text-2xl font-medium luxury-gradient-text">Loading your experience...</div>
+        </div>
       </div>
     );
   }
@@ -77,7 +82,9 @@ const Index = () => {
   const trendingContent = transformedSeries.slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+      <LuxuryParticles />
+      
       <Header 
         user={user}
         searchQuery={searchQuery}
@@ -92,7 +99,7 @@ const Index = () => {
       />
 
       {/* Category Filter */}
-      <section className="container mx-auto px-6 mb-12">
+      <section className="container mx-auto px-8 mb-20">
         <CategoryFilter 
           categories={categoryNames}
           selectedCategory={selectedCategory}
