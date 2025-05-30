@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   user: any;
@@ -17,6 +18,8 @@ interface HeaderProps {
 }
 
 const Header = ({ user, searchQuery, onSearchChange, onSignOut }: HeaderProps) => {
+  const navigate = useNavigate();
+
   return (
     <header className="glass-morphism border-b border-white/10 sticky top-0 z-50 animate-fade-in">
       <div className="container mx-auto px-8 py-6">
@@ -62,7 +65,10 @@ const Header = ({ user, searchQuery, onSearchChange, onSignOut }: HeaderProps) =
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <Button className="luxury-button text-white font-semibold text-lg">
+            <Button 
+              className="luxury-button text-white font-semibold text-lg"
+              onClick={() => navigate("/pricing")}
+            >
               Get Pro
             </Button>
           </div>
