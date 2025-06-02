@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Play, Pause, SkipForward, SkipBack, Volume2, X, Clock, Bookmark, RotateCcw, Settings, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface AudioPlayerProps {
   content: {
-    id: number;
+    id: string; // Changed from number to string to match UUID
     title: string;
     author: string;
     image: string;

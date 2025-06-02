@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AudioPlayer from "@/components/AudioPlayer";
@@ -201,7 +200,7 @@ const Index = () => {
             {showChapters && (
               <div className="w-80 bg-black/95 backdrop-blur-xl border-l border-white/10">
                 <ChapterNavigation
-                  episodeId={currentlyPlaying.id.toString()}
+                  episodeId={currentlyPlaying.id}
                   currentTime={0} // This would come from the audio player state
                   onSeek={(time) => {
                     // This would seek to the specific time in the audio player
