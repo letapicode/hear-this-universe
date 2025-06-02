@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bookmarks: {
+        Row: {
+          created_at: string
+          episode_id: string | null
+          id: string
+          note: string | null
+          timestamp_seconds: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          episode_id?: string | null
+          id?: string
+          note?: string | null
+          timestamp_seconds: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          episode_id?: string | null
+          id?: string
+          note?: string | null
+          timestamp_seconds?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -32,6 +67,92 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      chapters: {
+        Row: {
+          chapter_number: number
+          created_at: string
+          end_time: number
+          episode_id: string | null
+          id: string
+          start_time: number
+          title: string
+        }
+        Insert: {
+          chapter_number: number
+          created_at?: string
+          end_time: number
+          episode_id?: string | null
+          id?: string
+          start_time: number
+          title: string
+        }
+        Update: {
+          chapter_number?: number
+          created_at?: string
+          end_time?: number
+          episode_id?: string | null
+          id?: string
+          start_time?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapters_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      downloads: {
+        Row: {
+          download_url: string | null
+          downloaded_at: string
+          episode_id: string | null
+          expires_at: string | null
+          file_size: number | null
+          id: string
+          series_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          download_url?: string | null
+          downloaded_at?: string
+          episode_id?: string | null
+          expires_at?: string | null
+          file_size?: number | null
+          id?: string
+          series_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          download_url?: string | null
+          downloaded_at?: string
+          episode_id?: string | null
+          expires_at?: string | null
+          file_size?: number | null
+          id?: string
+          series_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "downloads_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "downloads_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       episodes: {
         Row: {
@@ -80,26 +201,32 @@ export type Database = {
       listening_progress: {
         Row: {
           completed: boolean | null
+          completion_percentage: number | null
           episode_id: string | null
           id: string
           last_listened_at: string | null
           progress_seconds: number | null
+          session_duration: number | null
           user_id: string | null
         }
         Insert: {
           completed?: boolean | null
+          completion_percentage?: number | null
           episode_id?: string | null
           id?: string
           last_listened_at?: string | null
           progress_seconds?: number | null
+          session_duration?: number | null
           user_id?: string | null
         }
         Update: {
           completed?: boolean | null
+          completion_percentage?: number | null
           episode_id?: string | null
           id?: string
           last_listened_at?: string | null
           progress_seconds?: number | null
+          session_duration?: number | null
           user_id?: string | null
         }
         Relationships: [
@@ -141,6 +268,50 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          created_at: string
+          helpful_count: number | null
+          id: string
+          is_verified_purchase: boolean | null
+          rating: number | null
+          review_text: string | null
+          series_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          helpful_count?: number | null
+          id?: string
+          is_verified_purchase?: boolean | null
+          rating?: number | null
+          review_text?: string | null
+          series_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          helpful_count?: number | null
+          id?: string
+          is_verified_purchase?: boolean | null
+          rating?: number | null
+          review_text?: string | null
+          series_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       series: {
         Row: {
@@ -281,6 +452,51 @@ export type Database = {
           stripe_price_id_monthly?: string | null
           stripe_price_id_yearly?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          books_completed: number | null
+          created_at: string
+          current_streak: number | null
+          display_name: string | null
+          favorite_genre: string | null
+          id: string
+          longest_streak: number | null
+          total_listening_time: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          books_completed?: number | null
+          created_at?: string
+          current_streak?: number | null
+          display_name?: string | null
+          favorite_genre?: string | null
+          id?: string
+          longest_streak?: number | null
+          total_listening_time?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          books_completed?: number | null
+          created_at?: string
+          current_streak?: number | null
+          display_name?: string | null
+          favorite_genre?: string | null
+          id?: string
+          longest_streak?: number | null
+          total_listening_time?: number | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

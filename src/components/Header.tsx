@@ -1,5 +1,5 @@
 
-import { Search, Headphones, User, LogOut } from "lucide-react";
+import { Search, Headphones, User, LogOut, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -55,6 +55,13 @@ const Header = ({ user, searchQuery, onSearchChange, onSignOut }: HeaderProps) =
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="glass-morphism border-white/20 shadow-2xl rounded-xl p-2 min-w-48">
+                <DropdownMenuItem 
+                  onClick={() => navigate("/profile")}
+                  className="hover:bg-white/10 text-foreground px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer"
+                >
+                  <UserCircle className="h-5 w-5 mr-3" />
+                  Profile
+                </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={onSignOut} 
                   className="hover:bg-white/10 text-foreground px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer"
