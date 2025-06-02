@@ -12,7 +12,7 @@ import ReviewsSection from "./ReviewsSection";
 
 interface EnhancedContentCardProps {
   content: {
-    id: number;
+    id: string; // Changed from number to string to match UUID
     title: string;
     author: string;
     category: string;
@@ -29,7 +29,7 @@ interface EnhancedContentCardProps {
 
 const EnhancedContentCard = ({ content, onPlay, currentlyPlaying }: EnhancedContentCardProps) => {
   const { user, subscription } = useAuth();
-  const { data: reviews = [] } = useSeriesReviews(content.id.toString());
+  const { data: reviews = [] } = useSeriesReviews(content.id);
   const createDownload = useCreateDownload();
   const { toast } = useToast();
   const [showReviews, setShowReviews] = useState(false);
@@ -61,8 +61,8 @@ const EnhancedContentCard = ({ content, onPlay, currentlyPlaying }: EnhancedCont
     try {
       // For demo, we'll use the content ID as both episode and series ID
       await createDownload.mutateAsync({
-        episodeId: content.id.toString(),
-        seriesId: content.id.toString()
+        episodeId: content.id,
+        seriesId: content.id
       });
       
       toast({
@@ -174,7 +174,7 @@ const EnhancedContentCard = ({ content, onPlay, currentlyPlaying }: EnhancedCont
 
         {showReviews && (
           <div className="border-t border-white/10 p-6">
-            <ReviewsSection seriesId={content.id.toString()} />
+            <ReviewsSection seriesId={content.id} />
           </div>
         )}
       </CardContent>
