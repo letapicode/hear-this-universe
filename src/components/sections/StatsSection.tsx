@@ -10,13 +10,17 @@ const StatsSection = ({ onPlay }: StatsSectionProps) => {
   return (
     <>
       {/* Listening Stats */}
-      <section className="container mx-auto px-8 mb-12">
-        <ListeningStats />
+      <section className="huly-section pb-8">
+        <div className="huly-container">
+          <ListeningStats />
+        </div>
       </section>
 
       {/* Recently Played */}
-      <section className="container mx-auto px-8 mb-12">
-        <RecentlyPlayed onPlay={onPlay} />
+      <section className="huly-section pb-8">
+        <div className="huly-container">
+          <RecentlyPlayed onPlay={onPlay} />
+        </div>
       </section>
     </>
   );

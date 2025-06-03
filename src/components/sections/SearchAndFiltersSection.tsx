@@ -24,23 +24,27 @@ const SearchAndFiltersSection = ({
   return (
     <>
       {/* Enhanced Search Section */}
-      <section className="container mx-auto px-8 mb-12">
-        <EnhancedSearch
-          searchQuery={searchQuery}
-          onSearchChange={onSearchChange}
-          filters={filters}
-          onFiltersChange={onFiltersChange}
-          availableCategories={availableCategories}
-        />
+      <section className="huly-section pb-8">
+        <div className="huly-container">
+          <EnhancedSearch
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
+            filters={filters}
+            onFiltersChange={onFiltersChange}
+            availableCategories={availableCategories}
+          />
+        </div>
       </section>
 
       {/* Category Filter */}
-      <section className="container mx-auto px-8 mb-20">
-        <CategoryFilter 
-          categories={availableCategories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={onCategoryChange}
-        />
+      <section className="pb-16">
+        <div className="huly-container">
+          <CategoryFilter 
+            categories={availableCategories}
+            selectedCategory={selectedCategory}
+            onCategoryChange={onCategoryChange}
+          />
+        </div>
       </section>
     </>
   );

@@ -9,17 +9,17 @@ interface CategoryFilterProps {
 
 const CategoryFilter = ({ categories, selectedCategory, onCategoryChange }: CategoryFilterProps) => {
   return (
-    <div className="flex flex-wrap gap-4 justify-center animate-scale-in">
+    <div className="flex flex-wrap gap-3 justify-center animate-scale-in">
       {categories.map((category) => (
         <Button
           key={category}
           onClick={() => onCategoryChange(category)}
           variant={selectedCategory === category ? "default" : "outline"}
           className={`
-            px-8 py-4 rounded-xl font-medium transition-all duration-300 text-lg
+            px-6 py-3 rounded-xl font-medium transition-all duration-200 huly-text-sm
             ${selectedCategory === category 
-              ? "luxury-gradient text-white shadow-lg hover:scale-105" 
-              : "glass-morphism border-white/20 text-foreground hover:bg-white/10 hover:scale-105 hover:border-primary/50"
+              ? "huly-gradient text-white huly-shadow hover:huly-shadow-hover hover:scale-105" 
+              : "huly-glass border-white/10 text-foreground hover:bg-white/5 hover:scale-105 hover:border-primary/30"
             }
           `}
         >
