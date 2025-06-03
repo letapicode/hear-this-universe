@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AudioPlayer from "@/components/AudioPlayer";
@@ -9,9 +10,13 @@ import LuxuryParticles from "@/components/LuxuryParticles";
 import EnhancedContentCard from "@/components/EnhancedContentCard";
 import EnhancedSearch from "@/components/EnhancedSearch";
 import ChapterNavigation from "@/components/ChapterNavigation";
+import MiniPlayer from "@/components/MiniPlayer";
+import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories, useSeries } from "@/hooks/useContentData";
-import { useSeriesReviews } from "@/hooks/useReviews";
+import { useAudioPlayer } from "@/hooks/useAudioPlayer";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useListeningHistory } from "@/hooks/useListeningHistory";
 
 interface SearchFilters {
   categories: string[];
@@ -23,11 +28,10 @@ interface SearchFilters {
 const Index = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showChapters, setShowChapters] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
     categories: [],
     isPremium: undefined,
@@ -37,6 +41,31 @@ const Index = () => {
 
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const { data: series = [], isLoading: seriesLoading } = useSeries();
+  
+  // Enhanced audio player with state management
+  const audioPlayer = useAudioPlayer();
+  const listeningHistory = useListeningHistory();
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onPlayPause: audioPlayer.togglePlayPause,
+    onSkipForward: () => audioPlayer.skipForward(15),
+    onSkipBackward: () => audioPlayer.skipBackward(15),
+    onVolumeUp: () => audioPlayer.setVolume(Math.min(audioPlayer.volume + 10, 100)),
+    onVolumeDown: () => audioPlayer.setVolume(Math.max(audioPlayer.volume - 10, 0)),
+    onSeekForward: () => audioPlayer.skipForward(5),
+    onSeekBackward: () => audioPlayer.skipBackward(5),
+    isPlayerActive: !!audioPlayer.currentContent
+  });
+
+  // Update listening history when content changes
+  useEffect(() => {
+    if (audioPlayer.currentContent && audioPlayer.isPlaying) {
+      listeningHistory.startSession(audioPlayer.currentContent);
+    } else if (!audioPlayer.isPlaying && listeningHistory.currentSession) {
+      listeningHistory.updateSession(audioPlayer.currentTime);
+    }
+  }, [audioPlayer.currentContent, audioPlayer.isPlaying]);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -64,16 +93,19 @@ const Index = () => {
   const categoryNames = ["All", ...categories.map(cat => cat.name)];
 
   const handlePlay = (content) => {
-    setCurrentlyPlaying(content);
-    setIsPlaying(true);
+    audioPlayer.playContent(content);
+    setIsMinimized(false);
   };
 
   const handleSignOut = async () => {
+    if (listeningHistory.currentSession) {
+      listeningHistory.endSession();
+    }
     await signOut();
     navigate("/auth");
   };
 
-  // Transform series data and add review ratings
+  // Transform series data
   const transformedSeries = series.map(s => ({
     id: s.id,
     title: s.title,
@@ -89,14 +121,11 @@ const Index = () => {
 
   // Enhanced filtering logic
   const filteredContent = transformedSeries.filter(content => {
-    // Text search
     const matchesSearch = content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          content.author.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Category filter
     const matchesCategory = selectedCategory === "All" || content.category === selectedCategory;
     
-    // Advanced filters
     const matchesFilters = filters.categories.length === 0 || filters.categories.includes(content.category);
     const matchesPremium = filters.isPremium === undefined || content.isPremium === filters.isPremium;
     
@@ -171,7 +200,7 @@ const Index = () => {
                 key={content.id}
                 content={content}
                 onPlay={handlePlay}
-                currentlyPlaying={currentlyPlaying}
+                currentlyPlaying={audioPlayer.currentContent}
               />
             ))}
           </div>
@@ -181,36 +210,56 @@ const Index = () => {
       <TrendingSection 
         trendingContent={trendingContent}
         onPlay={handlePlay}
-        currentlyPlaying={currentlyPlaying}
+        currentlyPlaying={audioPlayer.currentContent}
       />
 
-      {/* Enhanced Audio Player */}
-      {currentlyPlaying && (
-        <div className="fixed bottom-0 left-0 right-0 z-50">
-          <div className="flex">
-            <div className="flex-1">
-              <AudioPlayer 
-                content={currentlyPlaying}
-                isPlaying={isPlaying}
-                onPlayPause={() => setIsPlaying(!isPlaying)}
-                onClose={() => setCurrentlyPlaying(null)}
-              />
-            </div>
-            
-            {showChapters && (
-              <div className="w-80 bg-black/95 backdrop-blur-xl border-l border-white/10">
-                <ChapterNavigation
-                  episodeId={currentlyPlaying.id}
-                  currentTime={0} // This would come from the audio player state
-                  onSeek={(time) => {
-                    // This would seek to the specific time in the audio player
-                    console.log('Seeking to', time);
-                  }}
-                />
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp />
+
+      {/* Audio Player - Full or Mini */}
+      {audioPlayer.currentContent && (
+        <>
+          {isMinimized ? (
+            <MiniPlayer
+              content={audioPlayer.currentContent}
+              isPlaying={audioPlayer.isPlaying}
+              currentTime={audioPlayer.currentTime}
+              duration={audioPlayer.duration}
+              onPlayPause={audioPlayer.togglePlayPause}
+              onSkipForward={() => audioPlayer.skipForward(15)}
+              onSkipBackward={() => audioPlayer.skipBackward(15)}
+              onMaximize={() => setIsMinimized(false)}
+            />
+          ) : (
+            <div className="fixed bottom-0 left-0 right-0 z-50">
+              <div className="flex">
+                <div className="flex-1">
+                  <AudioPlayer 
+                    content={audioPlayer.currentContent}
+                    isPlaying={audioPlayer.isPlaying}
+                    onPlayPause={audioPlayer.togglePlayPause}
+                    onClose={() => {
+                      audioPlayer.closePlayer();
+                      if (listeningHistory.currentSession) {
+                        listeningHistory.endSession();
+                      }
+                    }}
+                  />
+                </div>
+                
+                {showChapters && (
+                  <div className="w-80 bg-black/95 backdrop-blur-xl border-l border-white/10">
+                    <ChapterNavigation
+                      episodeId={audioPlayer.currentContent.id}
+                      currentTime={audioPlayer.currentTime}
+                      onSeek={audioPlayer.seekTo}
+                    />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
