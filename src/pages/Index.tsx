@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AudioPlayer from "@/components/AudioPlayer";
@@ -12,6 +11,8 @@ import EnhancedSearch from "@/components/EnhancedSearch";
 import ChapterNavigation from "@/components/ChapterNavigation";
 import MiniPlayer from "@/components/MiniPlayer";
 import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp";
+import RecentlyPlayed from "@/components/RecentlyPlayed";
+import ListeningStats from "@/components/ListeningStats";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories, useSeries } from "@/hooks/useContentData";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
@@ -42,11 +43,9 @@ const Index = () => {
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const { data: series = [], isLoading: seriesLoading } = useSeries();
   
-  // Enhanced audio player with state management
   const audioPlayer = useAudioPlayer();
   const listeningHistory = useListeningHistory();
 
-  // Keyboard shortcuts
   useKeyboardShortcuts({
     onPlayPause: audioPlayer.togglePlayPause,
     onSkipForward: () => audioPlayer.skipForward(15),
@@ -58,7 +57,6 @@ const Index = () => {
     isPlayerActive: !!audioPlayer.currentContent
   });
 
-  // Update listening history when content changes
   useEffect(() => {
     if (audioPlayer.currentContent && audioPlayer.isPlaying) {
       listeningHistory.startSession(audioPlayer.currentContent);
@@ -67,7 +65,6 @@ const Index = () => {
     }
   }, [audioPlayer.currentContent, audioPlayer.isPlaying]);
 
-  // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/auth");
@@ -105,7 +102,6 @@ const Index = () => {
     navigate("/auth");
   };
 
-  // Transform series data
   const transformedSeries = series.map(s => ({
     id: s.id,
     title: s.title,
@@ -119,7 +115,6 @@ const Index = () => {
     isPremium: s.is_premium
   }));
 
-  // Enhanced filtering logic
   const filteredContent = transformedSeries.filter(content => {
     const matchesSearch = content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          content.author.toLowerCase().includes(searchQuery.toLowerCase());
@@ -152,6 +147,16 @@ const Index = () => {
         onPlay={handlePlay}
       />
 
+      {/* Listening Stats */}
+      <section className="container mx-auto px-8 mb-12">
+        <ListeningStats />
+      </section>
+
+      {/* Recently Played */}
+      <section className="container mx-auto px-8 mb-12">
+        <RecentlyPlayed onPlay={handlePlay} />
+      </section>
+
       {/* Enhanced Search Section */}
       <section className="container mx-auto px-8 mb-12">
         <EnhancedSearch
@@ -172,7 +177,7 @@ const Index = () => {
         />
       </section>
 
-      {/* Content Library with Enhanced Cards */}
+      {/* Content Library */}
       <section className="container mx-auto px-8 mb-20">
         <div className="flex items-center justify-between mb-12">
           <h2 className="text-4xl font-bold luxury-gradient-text">
@@ -213,10 +218,9 @@ const Index = () => {
         currentlyPlaying={audioPlayer.currentContent}
       />
 
-      {/* Keyboard Shortcuts Help */}
       <KeyboardShortcutsHelp />
 
-      {/* Audio Player - Full or Mini */}
+      {/* Audio Player */}
       {audioPlayer.currentContent && (
         <>
           {isMinimized ? (

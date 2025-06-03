@@ -1,16 +1,20 @@
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, SkipForward, SkipBack, Volume2, X, Clock, Bookmark, RotateCcw, Settings, Moon } from "lucide-react";
+import { X, Settings, RotateCcw, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
+import PlayerControls from "./player/PlayerControls";
+import VolumeControl from "./player/VolumeControl";
+import SpeedControl from "./player/SpeedControl";
+import BookmarkManager from "./player/BookmarkManager";
+import SleepTimer from "./player/SleepTimer";
 
 interface AudioPlayerProps {
   content: {
-    id: string; // Changed from number to string to match UUID
+    id: string;
     title: string;
     author: string;
     image: string;
@@ -20,23 +24,26 @@ interface AudioPlayerProps {
   onClose: () => void;
 }
 
+interface BookmarkData {
+  time: number;
+  note?: string;
+}
+
 const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerProps) => {
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(180); // 3 minutes for demo
+  const [duration, setDuration] = useState(180);
   const [volume, setVolume] = useState([80]);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [sleepTimer, setSleepTimer] = useState(0); // minutes
+  const [sleepTimer, setSleepTimer] = useState(0);
   const [sleepTimerActive, setSleepTimerActive] = useState(false);
   const [autoSave, setAutoSave] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [bookmarks, setBookmarks] = useState<number[]>([]);
+  const [bookmarks, setBookmarks] = useState<BookmarkData[]>([]);
   const [lastPosition, setLastPosition] = useState(0);
   
-  const audioRef = useRef<HTMLAudioElement>(null);
   const sleepTimerRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
 
-  // Simulate audio progress for demo
   useEffect(() => {
     if (isPlaying) {
       const interval = setInterval(() => {
@@ -46,7 +53,6 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
             return 0;
           }
           
-          // Auto-save progress every 30 seconds
           if (autoSave && Math.floor(newTime) % 30 === 0) {
             setLastPosition(newTime);
             localStorage.setItem(`audio_progress_${content.id}`, newTime.toString());
@@ -59,7 +65,6 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
     }
   }, [isPlaying, duration, playbackSpeed, autoSave, content.id]);
 
-  // Load saved position on mount
   useEffect(() => {
     const savedPosition = localStorage.getItem(`audio_progress_${content.id}`);
     if (savedPosition && autoSave) {
@@ -69,11 +74,10 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
     }
   }, [content.id, autoSave]);
 
-  // Sleep timer functionality
   useEffect(() => {
     if (sleepTimerActive && sleepTimer > 0) {
       sleepTimerRef.current = setTimeout(() => {
-        onPlayPause(); // Pause the audio
+        onPlayPause();
         setSleepTimerActive(false);
         toast({
           title: "Sleep Timer",
@@ -119,22 +123,16 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
     setCurrentTime(prev => Math.max(prev - 15, 0));
   };
 
-  const addBookmark = () => {
-    if (!bookmarks.includes(currentTime)) {
-      setBookmarks(prev => [...prev, currentTime].sort((a, b) => a - b));
-      toast({
-        title: "Bookmark Added",
-        description: `Added at ${formatTime(currentTime)}`,
-      });
-    }
+  const handleAddBookmark = (bookmark: BookmarkData) => {
+    setBookmarks(prev => [...prev, bookmark].sort((a, b) => a.time - b.time));
   };
 
-  const jumpToBookmark = (time: number) => {
+  const handleRemoveBookmark = (time: number) => {
+    setBookmarks(prev => prev.filter(bookmark => Math.abs(bookmark.time - time) > 1));
+  };
+
+  const handleJumpToBookmark = (time: number) => {
     setCurrentTime(time);
-  };
-
-  const removeBookmark = (time: number) => {
-    setBookmarks(prev => prev.filter(bookmark => bookmark !== time));
   };
 
   const resumeFromLastPosition = () => {
@@ -161,7 +159,7 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
   return (
     <Card className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl z-50 luxury-shadow">
       <CardContent className="p-6">
-        {/* Header with content info and controls */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 luxury-gradient rounded-xl flex items-center justify-center luxury-shadow">
@@ -185,72 +183,30 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
           </div>
           
           <div className="flex items-center space-x-2">
-            {/* Settings */}
             <Popover open={showSettings} onOpenChange={setShowSettings}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-300 hover:text-white"
-                >
+                <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white">
                   <Settings className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80 glass-morphism border-white/20">
                 <div className="space-y-4">
                   <h4 className="font-semibold text-white">Player Settings</h4>
-                  
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-300">Auto-save progress</span>
                     <Switch checked={autoSave} onCheckedChange={setAutoSave} />
-                  </div>
-                  
-                  <div>
-                    <span className="text-sm text-gray-300 block mb-2">Sleep Timer</span>
-                    <RadioGroup
-                      value={sleepTimer.toString()}
-                      onValueChange={(value) => setSleepTimerMinutes(parseInt(value))}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="0" id="timer-off" />
-                        <label htmlFor="timer-off" className="text-sm text-gray-300">Off</label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="15" id="timer-15" />
-                        <label htmlFor="timer-15" className="text-sm text-gray-300">15 minutes</label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="30" id="timer-30" />
-                        <label htmlFor="timer-30" className="text-sm text-gray-300">30 minutes</label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="60" id="timer-60" />
-                        <label htmlFor="timer-60" className="text-sm text-gray-300">1 hour</label>
-                      </div>
-                    </RadioGroup>
-                    {sleepTimerActive && (
-                      <div className="flex items-center mt-2 text-orange-400">
-                        <Moon className="h-4 w-4 mr-1" />
-                        <span className="text-xs">Timer active: {sleepTimer}min</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               </PopoverContent>
             </Popover>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-gray-300 hover:text-white"
-            >
+            <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-300 hover:text-white">
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        {/* Progress Bar with enhanced styling */}
+        {/* Progress Bar */}
         <div className="mb-6">
           <div className="relative">
             <Slider
@@ -260,20 +216,10 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
               onValueChange={handleSeek}
               className="w-full"
             />
-            {/* Progress background gradient */}
             <div 
               className="absolute top-1/2 left-0 h-1 luxury-gradient rounded-full -translate-y-1/2 pointer-events-none"
               style={{ width: `${progressPercentage}%` }}
             />
-            {/* Bookmarks on progress bar */}
-            {bookmarks.map((bookmark) => (
-              <div
-                key={bookmark}
-                className="absolute top-1/2 w-2 h-2 bg-yellow-400 rounded-full -translate-y-1/2 -translate-x-1 cursor-pointer hover:scale-125 transition-transform"
-                style={{ left: `${(bookmark / duration) * 100}%` }}
-                onClick={() => jumpToBookmark(bookmark)}
-              />
-            ))}
           </div>
           <div className="flex justify-between text-xs text-gray-400 mt-2">
             <span>{formatTime(currentTime)}</span>
@@ -282,124 +228,43 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
         </div>
 
         {/* Main Controls */}
-        <div className="flex items-center justify-center space-x-8 mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={skipBack}
-            className="text-white hover:text-purple-400 transition-colors"
-          >
-            <SkipBack className="h-6 w-6" />
-          </Button>
-          
-          <Button
-            onClick={onPlayPause}
-            className="luxury-gradient hover:scale-105 rounded-full w-16 h-16 luxury-shadow transition-all duration-300"
-          >
-            {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={skipForward}
-            className="text-white hover:text-purple-400 transition-colors"
-          >
-            <SkipForward className="h-6 w-6" />
-          </Button>
+        <div className="mb-6">
+          <PlayerControls
+            isPlaying={isPlaying}
+            onPlayPause={onPlayPause}
+            onSkipForward={skipForward}
+            onSkipBack={skipBack}
+          />
         </div>
 
         {/* Secondary Controls */}
-        <div className="flex items-center justify-between">
-          {/* Speed Control */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-300 hover:text-white glass-morphism px-4 py-2"
-              >
-                {playbackSpeed}x
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 glass-morphism border-white/20">
-              <div className="space-y-2">
-                <h4 className="font-semibold text-white text-sm">Playback Speed</h4>
-                <RadioGroup
-                  value={playbackSpeed.toString()}
-                  onValueChange={handleSpeedChange}
-                >
-                  {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
-                    <div key={speed} className="flex items-center space-x-2">
-                      <RadioGroupItem value={speed.toString()} id={`speed-${speed}`} />
-                      <label htmlFor={`speed-${speed}`} className="text-sm text-gray-300">
-                        {speed}x
-                      </label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          {/* Bookmark */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={addBookmark}
-            className="text-gray-300 hover:text-yellow-400 glass-morphism"
-          >
-            <Bookmark className="h-4 w-4" />
-          </Button>
-
-          {/* Sleep Timer Indicator */}
-          {sleepTimerActive && (
-            <div className="flex items-center text-orange-400 glass-morphism px-3 py-1 rounded-full">
-              <Clock className="h-4 w-4 mr-1" />
-              <span className="text-xs">{sleepTimer}min</span>
-            </div>
-          )}
+        <div className="flex items-center justify-between mb-6">
+          <SpeedControl
+            playbackSpeed={playbackSpeed}
+            onSpeedChange={handleSpeedChange}
+          />
           
-          {/* Volume Control */}
-          <div className="flex items-center space-x-3">
-            <Volume2 className="h-4 w-4 text-gray-400" />
-            <Slider
-              value={volume}
-              max={100}
-              step={1}
-              onValueChange={setVolume}
-              className="w-24"
-            />
-          </div>
+          <SleepTimer
+            sleepTimer={sleepTimer}
+            sleepTimerActive={sleepTimerActive}
+            onSetTimer={setSleepTimerMinutes}
+          />
+          
+          <VolumeControl
+            volume={volume}
+            onVolumeChange={setVolume}
+          />
         </div>
 
-        {/* Bookmarks List */}
-        {bookmarks.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <h5 className="text-sm font-medium text-gray-300 mb-2">Bookmarks</h5>
-            <div className="flex flex-wrap gap-2">
-              {bookmarks.map((bookmark) => (
-                <div
-                  key={bookmark}
-                  className="flex items-center glass-morphism rounded-full px-3 py-1"
-                >
-                  <button
-                    onClick={() => jumpToBookmark(bookmark)}
-                    className="text-xs text-yellow-400 hover:text-yellow-300 mr-2"
-                  >
-                    {formatTime(bookmark)}
-                  </button>
-                  <button
-                    onClick={() => removeBookmark(bookmark)}
-                    className="text-xs text-gray-500 hover:text-red-400"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Bookmarks */}
+        <BookmarkManager
+          bookmarks={bookmarks}
+          currentTime={currentTime}
+          duration={duration}
+          onAddBookmark={handleAddBookmark}
+          onRemoveBookmark={handleRemoveBookmark}
+          onJumpToBookmark={handleJumpToBookmark}
+        />
       </CardContent>
     </Card>
   );
