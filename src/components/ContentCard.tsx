@@ -1,8 +1,10 @@
 
-import { Play, BookOpen, Clock, Star, Crown } from "lucide-react";
+import { Play, BookOpen, Clock, Star, Crown, Heart, Download, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { useState } from "react";
 
 interface ContentCardProps {
   content: {
@@ -23,109 +25,248 @@ interface ContentCardProps {
 }
 
 const ContentCard = ({ content, onPlay, isCurrentlyPlaying, compact = false }: ContentCardProps) => {
+  const [isLiked, setIsLiked] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  
+  // Simulate some dynamic data
+  const rating = 4.2 + Math.random() * 0.8;
+  const progress = Math.random() > 0.7 ? Math.floor(Math.random() * 100) : undefined;
+  const totalListeners = Math.floor(Math.random() * 50000) + 1000;
+
+  if (compact) {
+    return (
+      <Card 
+        className={`huly-card group overflow-hidden h-[120px] ${
+          isCurrentlyPlaying ? 'ring-2 ring-primary huly-shadow-hover scale-[1.02]' : ''
+        }`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <CardContent className="p-4 h-full">
+          <div className="flex gap-4 h-full">
+            {/* Compact Image */}
+            <div className="w-20 h-20 relative overflow-hidden rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 shrink-0">
+              <div className="absolute inset-0 huly-gradient opacity-60"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <BookOpen className="h-8 w-8 text-white/70" />
+              </div>
+              
+              {/* Play overlay */}
+              <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-all duration-300 ${
+                isHovered ? 'opacity-100' : 'opacity-0'
+              }`}>
+                <Button
+                  onClick={() => onPlay(content)}
+                  size="icon"
+                  className="huly-gradient rounded-full w-8 h-8 p-0"
+                >
+                  <Play className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {progress && progress > 0 && (
+                <div className="absolute bottom-0 left-0 right-0 h-1">
+                  <Progress value={progress} className="h-full rounded-none" />
+                </div>
+              )}
+            </div>
+            
+            {/* Compact Info */}
+            <div className="flex-1 min-w-0 flex flex-col justify-between">
+              <div>
+                <h3 className="huly-text-sm font-bold text-foreground line-clamp-1 group-hover:huly-gradient-text transition-all duration-300">
+                  {content.title}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">{content.author}</p>
+                
+                {/* Rating */}
+                <div className="flex items-center gap-1 mt-1">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-2.5 w-2.5 ${
+                          star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-600'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {rating.toFixed(1)}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{content.episodes} eps</span>
+                  <span>•</span>
+                  <span>{content.duration}</span>
+                </div>
+                
+                <div className={`flex gap-1 transition-all duration-300 ${
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                }`}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsLiked(!isLiked);
+                    }}
+                    className="w-6 h-6 p-0"
+                  >
+                    <Heart className={`h-3 w-3 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className={`luxury-card group overflow-hidden ${
-      isCurrentlyPlaying ? 'ring-2 ring-primary shadow-2xl scale-105' : ''
-    } ${compact ? 'h-auto' : 'h-full'}`}>
-      <CardContent className={compact ? "p-6" : "p-8"}>
-        <div className={`${compact ? 'flex space-x-6' : 'space-y-6'} h-full`}>
-          {/* Image Container */}
-          <div className={`${compact ? 'w-20 h-20' : 'w-full h-64'} relative overflow-hidden rounded-2xl`}>
-            <div className="absolute inset-0 luxury-gradient opacity-90"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <BookOpen className={`${compact ? 'h-8 w-8' : 'h-16 w-16'} text-white/90`} />
-            </div>
-            
-            {/* Play Button Overlay */}
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
-              <Button
-                onClick={() => onPlay(content)}
-                size="icon"
-                className="bg-white/20 hover:bg-white/30 text-white rounded-full backdrop-blur-sm transform scale-0 group-hover:scale-100 transition-transform duration-300 w-16 h-16"
-              >
-                <Play className="h-8 w-8" />
-              </Button>
-            </div>
-            
-            {/* Badges */}
-            <div className="absolute top-3 left-3 flex flex-col space-y-2">
-              {content.isNew && (
-                <Badge className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold animate-pulse">
-                  NEW
-                </Badge>
-              )}
-              {content.isPremium && (
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold flex items-center">
-                  <Crown className="h-3 w-3 mr-1" />
-                  PRO
-                </Badge>
-              )}
-            </div>
-            
-            {/* Floating particles for premium content */}
+    <Card 
+      className={`huly-card group overflow-hidden h-[320px] ${
+        isCurrentlyPlaying ? 'ring-2 ring-primary huly-shadow-hover scale-[1.02]' : ''
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <CardContent className="p-0 h-full flex flex-col">
+        {/* Image Container */}
+        <div className="h-40 relative overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
+          <div className="absolute inset-0 huly-gradient opacity-60"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <BookOpen className="h-12 w-12 text-white/70" />
+          </div>
+          
+          {/* Play Button Overlay */}
+          <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-all duration-300 ${
+            isHovered ? 'opacity-100' : 'opacity-0'
+          }`}>
+            <Button
+              onClick={() => onPlay(content)}
+              size="icon"
+              className="huly-gradient hover:scale-110 text-white rounded-full w-12 h-12 transition-all duration-200"
+            >
+              <Play className="h-6 w-6" />
+            </Button>
+          </div>
+          
+          {/* Badges */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1">
+            {content.isNew && (
+              <Badge className="bg-red-500 text-white text-xs font-bold px-2 py-1">
+                NEW
+              </Badge>
+            )}
             {content.isPremium && (
-              <>
-                <div className="absolute top-2 right-2 w-2 h-2 bg-yellow-400 rounded-full animate-float"></div>
-                <div className="absolute bottom-4 right-4 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
-              </>
+              <Badge className="bg-amber-500 text-white text-xs font-bold px-2 py-1 flex items-center gap-1">
+                <Crown className="h-3 w-3" />
+                PRO
+              </Badge>
             )}
           </div>
           
-          <div className={`${compact ? 'flex-1' : 'flex-1 flex flex-col justify-between'} space-y-4`}>
-            {/* Header */}
-            <div className="space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className={`${compact ? 'text-xl' : 'text-2xl'} font-bold text-foreground group-hover:luxury-gradient-text transition-all duration-300 leading-tight`}>
-                    {content.title}
-                  </h3>
-                  <p className="text-lg text-muted-foreground font-medium mt-2">{content.author}</p>
-                </div>
-                <Badge 
-                  variant="secondary" 
-                  className="glass-morphism border-white/20 text-sm font-medium px-3 py-1"
-                >
-                  {content.category}
-                </Badge>
-              </div>
-              
-              {content.description && !compact && (
-                <p className="text-muted-foreground leading-relaxed line-clamp-3 text-lg">
-                  {content.description}
+          {/* Quick Actions */}
+          <div className={`absolute top-2 right-2 flex gap-1 transition-all duration-300 ${
+            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+          }`}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsLiked(!isLiked);
+              }}
+              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full"
+            >
+              <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full text-white"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full text-white"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Progress Bar */}
+          {progress && progress > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 h-1">
+              <Progress value={progress} className="h-full rounded-none" />
+            </div>
+          )}
+        </div>
+        
+        {/* Content Info */}
+        <div className="p-4 flex-1 flex flex-col justify-between">
+          <div className="space-y-2">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <h3 className="huly-text-base font-bold text-foreground line-clamp-2 group-hover:huly-gradient-text transition-all duration-300">
+                  {content.title}
+                </h3>
+                <p className="huly-text-sm text-muted-foreground font-medium mt-1">
+                  {content.author}
                 </p>
-              )}
+              </div>
+              <Badge variant="outline" className="huly-glass border-white/10 text-xs shrink-0 ml-2">
+                {content.category}
+              </Badge>
             </div>
             
-            {/* Footer */}
-            <div className="flex items-center justify-between pt-4 border-t border-white/10">
-              <div className="flex items-center space-x-6 text-muted-foreground">
-                <span className="flex items-center space-x-2 text-sm">
-                  <BookOpen className="h-4 w-4 text-primary" />
-                  <span className="font-medium">{content.episodes} eps</span>
-                </span>
-                <span className="flex items-center space-x-2 text-sm">
-                  <Clock className="h-4 w-4 text-primary" />
-                  <span className="font-medium">{content.duration}</span>
-                </span>
-                {content.isPremium && (
-                  <span className="flex items-center space-x-1 text-amber-500 text-sm">
-                    <Star className="h-4 w-4 fill-current" />
-                    <span className="font-medium">Premium</span>
-                  </span>
-                )}
+            {/* Rating */}
+            <div className="flex items-center gap-1">
+              <div className="flex">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`h-3 w-3 ${
+                      star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-600'
+                    }`}
+                  />
+                ))}
               </div>
-              
-              {!compact && (
-                <Button
-                  onClick={() => onPlay(content)}
-                  variant="ghost"
-                  className="text-primary hover:text-white hover:bg-primary/20 font-medium px-6 py-2 rounded-lg transition-all duration-300 hover:scale-105"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Play
-                </Button>
-              )}
+              <span className="text-xs text-muted-foreground ml-1">
+                {rating.toFixed(1)}
+              </span>
             </div>
+
+            {content.description && (
+              <p className="text-muted-foreground leading-relaxed line-clamp-2 text-sm">
+                {content.description}
+              </p>
+            )}
+          </div>
+          
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-3 border-t border-white/5">
+            <div className="flex items-center gap-3 text-muted-foreground text-xs">
+              <span className="flex items-center gap-1">
+                <BookOpen className="h-3 w-3" />
+                {content.episodes} eps
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {content.duration}
+              </span>
+            </div>
+            
+            <span className="text-xs text-muted-foreground">
+              {totalListeners.toLocaleString()} listeners
+            </span>
           </div>
         </div>
       </CardContent>

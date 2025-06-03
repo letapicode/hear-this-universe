@@ -1,7 +1,9 @@
 
-import { Play, Pause, SkipForward, SkipBack, Maximize2 } from "lucide-react";
+import { Play, Pause, SkipForward, SkipBack, Maximize2, Heart, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import { useState } from "react";
 
 interface MiniPlayerProps {
   content: {
@@ -29,6 +31,9 @@ const MiniPlayer = ({
   onSkipBackward,
   onMaximize
 }: MiniPlayerProps) => {
+  const [volume, setVolume] = useState(80);
+  const [isLiked, setIsLiked] = useState(false);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -38,67 +43,97 @@ const MiniPlayer = ({
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <Card className="fixed bottom-4 right-4 w-80 glass-morphism border-white/10 luxury-shadow z-40 hover:scale-105 transition-transform">
-      <CardContent className="p-4">
+    <Card className="fixed bottom-6 right-6 w-96 huly-glass border-white/10 huly-shadow-lg z-50 hover:scale-[1.02] transition-all duration-300">
+      <CardContent className="p-0">
         {/* Progress bar */}
-        <div className="w-full h-1 bg-white/10 rounded-full mb-3 overflow-hidden">
+        <div className="w-full h-1 bg-white/10 rounded-t-xl overflow-hidden">
           <div 
-            className="h-full luxury-gradient transition-all duration-300"
+            className="h-full huly-gradient transition-all duration-300"
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
 
-        <div className="flex items-center space-x-3">
-          {/* Album art */}
-          <div className="w-12 h-12 luxury-gradient rounded-lg flex items-center justify-center flex-shrink-0">
-            <div className="w-8 h-8 bg-white/20 rounded animate-pulse"></div>
-          </div>
+        <div className="p-4">
+          <div className="flex items-center gap-4">
+            {/* Album art */}
+            <div className="w-14 h-14 huly-gradient rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+              <div className="w-10 h-10 bg-white/20 rounded-lg animate-pulse"></div>
+              {isPlaying && (
+                <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
+              )}
+            </div>
 
-          {/* Content info */}
-          <div className="flex-1 min-w-0">
-            <h4 className="font-medium text-white text-sm truncate">{content.title}</h4>
-            <p className="text-xs text-gray-400 truncate">{content.author}</p>
-            <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
+            {/* Content info */}
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-white huly-text-sm truncate">{content.title}</h4>
+              <p className="text-xs text-muted-foreground truncate">{content.author}</p>
+              <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsLiked(!isLiked);
+                }}
+                className="w-8 h-8 p-0 text-muted-foreground hover:text-white"
+              >
+                <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onSkipBackward}
+                className="w-8 h-8 p-0 text-muted-foreground hover:text-white"
+              >
+                <SkipBack className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                onClick={onPlayPause}
+                className="huly-gradient hover:scale-110 rounded-full w-10 h-10 p-0 transition-all duration-200 huly-shadow"
+              >
+                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onSkipForward}
+                className="w-8 h-8 p-0 text-muted-foreground hover:text-white"
+              >
+                <SkipForward className="h-4 w-4" />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onMaximize}
+                className="w-8 h-8 p-0 text-muted-foreground hover:text-white"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center space-x-1 flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onSkipBackward}
-              className="text-white hover:text-purple-400 w-8 h-8 p-0"
-            >
-              <SkipBack className="h-4 w-4" />
-            </Button>
-            
-            <Button
-              onClick={onPlayPause}
-              className="luxury-gradient hover:scale-110 rounded-full w-8 h-8 p-0 transition-all"
-            >
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onSkipForward}
-              className="text-white hover:text-purple-400 w-8 h-8 p-0"
-            >
-              <SkipForward className="h-4 w-4" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onMaximize}
-              className="text-white hover:text-purple-400 w-8 h-8 p-0"
-            >
-              <Maximize2 className="h-4 w-4" />
-            </Button>
+          {/* Volume Control */}
+          <div className="flex items-center gap-2 mt-3 px-2">
+            <Volume2 className="h-4 w-4 text-muted-foreground" />
+            <Slider
+              value={[volume]}
+              onValueChange={(value) => setVolume(value[0])}
+              max={100}
+              step={1}
+              className="flex-1"
+            />
+            <span className="text-xs text-muted-foreground w-8 text-right">{volume}%</span>
           </div>
         </div>
       </CardContent>

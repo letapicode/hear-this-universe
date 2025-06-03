@@ -1,182 +1,204 @@
 
-import { useState } from "react";
-import { Play, Download, Star, MessageSquare, Clock, User } from "lucide-react";
+import { Play, Pause, Heart, Download, MoreHorizontal, Star, Clock, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { useCreateDownload } from "@/hooks/useDownloads";
-import { useSeriesReviews } from "@/hooks/useReviews";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import ReviewsSection from "./ReviewsSection";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { useState } from "react";
 
 interface EnhancedContentCardProps {
   content: {
-    id: string; // Changed from number to string to match UUID
+    id: string;
     title: string;
     author: string;
     category: string;
     episodes: number;
     duration: string;
     image: string;
-    description: string;
-    isNew: boolean;
-    isPremium: boolean;
+    description?: string;
+    isNew?: boolean;
+    isPremium?: boolean;
+    rating?: number;
+    progress?: number; // 0-100
+    totalListeners?: number;
   };
   onPlay: (content: any) => void;
-  currentlyPlaying: any;
+  currentlyPlaying?: any;
+  size?: 'small' | 'medium' | 'large';
 }
 
-const EnhancedContentCard = ({ content, onPlay, currentlyPlaying }: EnhancedContentCardProps) => {
-  const { user, subscription } = useAuth();
-  const { data: reviews = [] } = useSeriesReviews(content.id);
-  const createDownload = useCreateDownload();
-  const { toast } = useToast();
-  const [showReviews, setShowReviews] = useState(false);
-
+const EnhancedContentCard = ({ 
+  content, 
+  onPlay, 
+  currentlyPlaying, 
+  size = 'medium' 
+}: EnhancedContentCardProps) => {
+  const [isLiked, setIsLiked] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const isPlaying = currentlyPlaying?.id === content.id;
-  const averageRating = reviews.length > 0 
-    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
-    : 0;
 
-  const handleDownload = async () => {
-    if (!user) {
-      toast({
-        title: "Please sign in",
-        description: "You need to be signed in to download content.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (content.isPremium && !subscription?.subscribed) {
-      toast({
-        title: "Premium Required",
-        description: "This content requires a premium subscription.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      // For demo, we'll use the content ID as both episode and series ID
-      await createDownload.mutateAsync({
-        episodeId: content.id,
-        seriesId: content.id
-      });
-      
-      toast({
-        title: "Download started",
-        description: `${content.title} is being downloaded.`
-      });
-    } catch (error) {
-      toast({
-        title: "Download failed",
-        description: "Please try again later.",
-        variant: "destructive"
-      });
+  const sizeClasses = {
+    small: {
+      card: 'h-[280px]',
+      image: 'h-32',
+      title: 'huly-text-sm',
+      author: 'text-xs'
+    },
+    medium: {
+      card: 'h-[320px]',
+      image: 'h-40',
+      title: 'huly-text-base',
+      author: 'huly-text-sm'
+    },
+    large: {
+      card: 'h-[360px]',
+      image: 'h-48',
+      title: 'huly-text-lg',
+      author: 'huly-text-base'
     }
   };
 
+  const currentSize = sizeClasses[size];
+
   return (
-    <Card className="glass-morphism border-white/10 overflow-hidden hover:border-white/20 transition-all duration-300 hover:scale-105">
-      <CardContent className="p-0">
-        <div className="relative">
-          <div className="w-full h-64 luxury-gradient rounded-t-xl flex items-center justify-center">
-            <div className="w-32 h-32 bg-white/20 rounded-xl animate-pulse"></div>
+    <Card 
+      className={`huly-card group ${currentSize.card} overflow-hidden ${
+        isPlaying ? 'ring-2 ring-primary huly-shadow-hover scale-[1.02]' : ''
+      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <CardContent className="p-0 h-full flex flex-col">
+        {/* Image Container */}
+        <div className={`${currentSize.image} relative overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20`}>
+          <div className="absolute inset-0 huly-gradient opacity-60"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Headphones className="h-12 w-12 text-white/70" />
           </div>
           
-          <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-            {content.isNew && (
-              <Badge className="bg-green-500/80 text-white">New</Badge>
-            )}
-            {content.isPremium && (
-              <Badge className="bg-yellow-500/80 text-white">Premium</Badge>
-            )}
-          </div>
-
-          {averageRating > 0 && (
-            <div className="absolute top-4 right-4 flex items-center space-x-1 bg-black/60 rounded-full px-2 py-1">
-              <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-              <span className="text-white text-xs font-medium">
-                {averageRating.toFixed(1)}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="p-6 space-y-4">
-          <div>
-            <h3 className="font-semibold text-white text-lg mb-1 leading-tight">
-              {content.title}
-            </h3>
-            <div className="flex items-center text-gray-400 text-sm space-x-4">
-              <div className="flex items-center">
-                <User className="h-4 w-4 mr-1" />
-                {content.author}
-              </div>
-              <div className="flex items-center">
-                <Clock className="h-4 w-4 mr-1" />
-                {content.duration}
-              </div>
-            </div>
-          </div>
-
-          <p className="text-gray-300 text-sm line-clamp-2">
-            {content.description}
-          </p>
-
-          <div className="flex items-center justify-between text-sm text-gray-400">
-            <span>{content.episodes} episodes</span>
-            <span>{content.category}</span>
-          </div>
-
-          {/* Reviews Preview */}
-          {reviews.length > 0 && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <MessageSquare className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-400 text-sm">
-                  {reviews.length} review{reviews.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowReviews(!showReviews)}
-                className="text-purple-400 hover:text-purple-300"
-              >
-                {showReviews ? 'Hide' : 'Show'} Reviews
-              </Button>
-            </div>
-          )}
-
-          <div className="flex space-x-2">
+          {/* Play Button Overlay */}
+          <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-all duration-300 ${
+            isHovered ? 'opacity-100' : 'opacity-0'
+          }`}>
             <Button
               onClick={() => onPlay(content)}
-              className={`luxury-button flex-1 ${isPlaying ? 'animate-pulse' : ''}`}
+              size="icon"
+              className="huly-gradient hover:scale-110 text-white rounded-full w-12 h-12 huly-shadow-lg transition-all duration-200"
             >
-              <Play className="h-4 w-4 mr-2" />
-              {isPlaying ? 'Playing' : 'Play'}
+              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
             </Button>
-            
+          </div>
+          
+          {/* Top Badges */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1">
+            {content.isNew && (
+              <Badge className="bg-red-500 text-white text-xs font-bold px-2 py-1">
+                NEW
+              </Badge>
+            )}
+            {content.isPremium && (
+              <Badge className="bg-amber-500 text-white text-xs font-bold px-2 py-1">
+                PRO
+              </Badge>
+            )}
+          </div>
+
+          {/* Quick Actions */}
+          <div className={`absolute top-2 right-2 flex gap-1 transition-all duration-300 ${
+            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+          }`}>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownload}
-              disabled={createDownload.isPending}
-              className="glass-morphism border-white/20 hover:bg-white/10"
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsLiked(!isLiked);
+              }}
+              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full"
+            >
+              <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full text-white"
             >
               <Download className="h-4 w-4" />
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full text-white"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Progress Bar */}
+          {content.progress && content.progress > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 h-1">
+              <Progress value={content.progress} className="h-full rounded-none" />
+            </div>
+          )}
+        </div>
+        
+        {/* Content Info */}
+        <div className="p-4 flex-1 flex flex-col justify-between">
+          <div className="space-y-2">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <h3 className={`${currentSize.title} font-bold text-foreground line-clamp-2 group-hover:huly-gradient-text transition-all duration-300`}>
+                  {content.title}
+                </h3>
+                <p className={`${currentSize.author} text-muted-foreground font-medium mt-1`}>
+                  {content.author}
+                </p>
+              </div>
+              <Badge variant="outline" className="huly-glass border-white/10 text-xs shrink-0 ml-2">
+                {content.category}
+              </Badge>
+            </div>
+            
+            {/* Rating */}
+            {content.rating && (
+              <div className="flex items-center gap-1">
+                <div className="flex">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-3 w-3 ${
+                        star <= content.rating! ? 'fill-yellow-400 text-yellow-400' : 'text-gray-600'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-muted-foreground ml-1">
+                  {content.rating.toFixed(1)}
+                </span>
+              </div>
+            )}
+          </div>
+          
+          {/* Stats */}
+          <div className="flex items-center justify-between pt-3 border-t border-white/5">
+            <div className="flex items-center gap-3 text-muted-foreground text-xs">
+              <span className="flex items-center gap-1">
+                <Headphones className="h-3 w-3" />
+                {content.episodes} eps
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {content.duration}
+              </span>
+            </div>
+            
+            {content.totalListeners && (
+              <span className="text-xs text-muted-foreground">
+                {content.totalListeners.toLocaleString()} listeners
+              </span>
+            )}
           </div>
         </div>
-
-        {showReviews && (
-          <div className="border-t border-white/10 p-6">
-            <ReviewsSection seriesId={content.id} />
-          </div>
-        )}
       </CardContent>
     </Card>
   );
