@@ -1,23 +1,21 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import AudioPlayer from "@/components/AudioPlayer";
-import CategoryFilter from "@/components/CategoryFilter";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import TrendingSection from "@/components/TrendingSection";
 import LuxuryParticles from "@/components/LuxuryParticles";
-import EnhancedContentCard from "@/components/EnhancedContentCard";
-import EnhancedSearch from "@/components/EnhancedSearch";
-import ChapterNavigation from "@/components/ChapterNavigation";
-import MiniPlayer from "@/components/MiniPlayer";
 import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp";
-import RecentlyPlayed from "@/components/RecentlyPlayed";
-import ListeningStats from "@/components/ListeningStats";
+import SearchAndFiltersSection from "@/components/sections/SearchAndFiltersSection";
+import StatsSection from "@/components/sections/StatsSection";
+import LibrarySection from "@/components/sections/LibrarySection";
+import PlayerManager from "@/components/PlayerManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories, useSeries } from "@/hooks/useContentData";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useListeningHistory } from "@/hooks/useListeningHistory";
+import { useContentFiltering } from "@/hooks/useContentFiltering";
 
 interface SearchFilters {
   categories: string[];
@@ -45,6 +43,13 @@ const Index = () => {
   
   const audioPlayer = useAudioPlayer();
   const listeningHistory = useListeningHistory();
+
+  const { filteredContent, featuredContent, trendingContent } = useContentFiltering(
+    series,
+    searchQuery,
+    selectedCategory,
+    filters
+  );
 
   useKeyboardShortcuts({
     onPlayPause: audioPlayer.togglePlayPause,
@@ -102,34 +107,6 @@ const Index = () => {
     navigate("/auth");
   };
 
-  const transformedSeries = series.map(s => ({
-    id: s.id,
-    title: s.title,
-    author: s.author,
-    category: s.categories?.name || 'Unknown',
-    episodes: s.total_episodes,
-    duration: "45 min avg",
-    image: s.cover_image_url || "/placeholder.svg",
-    description: s.description,
-    isNew: new Date(s.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    isPremium: s.is_premium
-  }));
-
-  const filteredContent = transformedSeries.filter(content => {
-    const matchesSearch = content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         content.author.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = selectedCategory === "All" || content.category === selectedCategory;
-    
-    const matchesFilters = filters.categories.length === 0 || filters.categories.includes(content.category);
-    const matchesPremium = filters.isPremium === undefined || content.isPremium === filters.isPremium;
-    
-    return matchesSearch && matchesCategory && matchesFilters && matchesPremium;
-  });
-
-  const featuredContent = transformedSeries.filter(s => series.find(original => original.id === s.id)?.is_featured);
-  const trendingContent = transformedSeries.slice(0, 2);
-
   return (
     <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
       <LuxuryParticles />
@@ -147,70 +124,23 @@ const Index = () => {
         onPlay={handlePlay}
       />
 
-      {/* Listening Stats */}
-      <section className="container mx-auto px-8 mb-12">
-        <ListeningStats />
-      </section>
+      <StatsSection onPlay={handlePlay} />
 
-      {/* Recently Played */}
-      <section className="container mx-auto px-8 mb-12">
-        <RecentlyPlayed onPlay={handlePlay} />
-      </section>
+      <SearchAndFiltersSection
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filters={filters}
+        onFiltersChange={setFilters}
+        availableCategories={categoryNames}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+      />
 
-      {/* Enhanced Search Section */}
-      <section className="container mx-auto px-8 mb-12">
-        <EnhancedSearch
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          filters={filters}
-          onFiltersChange={setFilters}
-          availableCategories={categoryNames}
-        />
-      </section>
-
-      {/* Category Filter */}
-      <section className="container mx-auto px-8 mb-20">
-        <CategoryFilter 
-          categories={categoryNames}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-        />
-      </section>
-
-      {/* Content Library */}
-      <section className="container mx-auto px-8 mb-20">
-        <div className="flex items-center justify-between mb-12">
-          <h2 className="text-4xl font-bold luxury-gradient-text">
-            Your Library
-          </h2>
-          <div className="text-gray-400">
-            {filteredContent.length} audiobook{filteredContent.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-
-        {filteredContent.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="luxury-gradient w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center">
-              <div className="w-10 h-10 bg-white/20 rounded-full"></div>
-            </div>
-            <h3 className="text-2xl font-semibold text-white mb-4">No audiobooks found</h3>
-            <p className="text-gray-400 max-w-md mx-auto">
-              Try adjusting your search terms or filters to find more content.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {filteredContent.map((content) => (
-              <EnhancedContentCard
-                key={content.id}
-                content={content}
-                onPlay={handlePlay}
-                currentlyPlaying={audioPlayer.currentContent}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+      <LibrarySection
+        filteredContent={filteredContent}
+        onPlay={handlePlay}
+        currentlyPlaying={audioPlayer.currentContent}
+      />
 
       <TrendingSection 
         trendingContent={trendingContent}
@@ -220,51 +150,17 @@ const Index = () => {
 
       <KeyboardShortcutsHelp />
 
-      {/* Audio Player */}
-      {audioPlayer.currentContent && (
-        <>
-          {isMinimized ? (
-            <MiniPlayer
-              content={audioPlayer.currentContent}
-              isPlaying={audioPlayer.isPlaying}
-              currentTime={audioPlayer.currentTime}
-              duration={audioPlayer.duration}
-              onPlayPause={audioPlayer.togglePlayPause}
-              onSkipForward={() => audioPlayer.skipForward(15)}
-              onSkipBackward={() => audioPlayer.skipBackward(15)}
-              onMaximize={() => setIsMinimized(false)}
-            />
-          ) : (
-            <div className="fixed bottom-0 left-0 right-0 z-50">
-              <div className="flex">
-                <div className="flex-1">
-                  <AudioPlayer 
-                    content={audioPlayer.currentContent}
-                    isPlaying={audioPlayer.isPlaying}
-                    onPlayPause={audioPlayer.togglePlayPause}
-                    onClose={() => {
-                      audioPlayer.closePlayer();
-                      if (listeningHistory.currentSession) {
-                        listeningHistory.endSession();
-                      }
-                    }}
-                  />
-                </div>
-                
-                {showChapters && (
-                  <div className="w-80 bg-black/95 backdrop-blur-xl border-l border-white/10">
-                    <ChapterNavigation
-                      episodeId={audioPlayer.currentContent.id}
-                      currentTime={audioPlayer.currentTime}
-                      onSeek={audioPlayer.seekTo}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </>
-      )}
+      <PlayerManager
+        currentContent={audioPlayer.currentContent}
+        isPlaying={audioPlayer.isPlaying}
+        currentTime={audioPlayer.currentTime}
+        duration={audioPlayer.duration}
+        isMinimized={isMinimized}
+        showChapters={showChapters}
+        audioPlayer={audioPlayer}
+        listeningHistory={listeningHistory}
+        onMinimize={setIsMinimized}
+      />
     </div>
   );
 };
