@@ -18,8 +18,8 @@ const CategoryFilter = ({ categories, selectedCategory, onCategoryChange }: Cate
           className={`
             px-6 py-3 rounded-xl font-medium transition-all duration-200 huly-text-sm
             ${selectedCategory === category 
-              ? "huly-gradient text-white huly-shadow hover:huly-shadow-hover hover:scale-105" 
-              : "huly-glass border-white/10 text-foreground hover:bg-white/5 hover:scale-105 hover:border-primary/30"
+              ? "huly-gradient text-white huly-shadow hover:huly-shadow-hover hover:scale-105 border-0" 
+              : "huly-glass border-white/10 text-white hover:bg-white/10 hover:scale-105 hover:border-primary/30 hover:text-white"
             }
           `}
         >

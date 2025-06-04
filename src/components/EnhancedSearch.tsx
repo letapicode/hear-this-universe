@@ -64,7 +64,7 @@ const EnhancedSearch = ({
           placeholder="Search by title, author, narrator..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-12 pr-16 py-4 glass-morphism border-white/20 text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary/50 rounded-xl text-lg"
+          className="pl-12 pr-16 py-4 huly-glass border-white/20 text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary/50 rounded-xl text-lg"
         />
         
         <Popover open={showFilters} onOpenChange={setShowFilters}>
@@ -72,17 +72,17 @@ const EnhancedSearch = ({
             <Button
               variant="outline"
               size="sm"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 glass-morphism border-white/20 hover:bg-white/10"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 huly-glass border-white/20 hover:bg-white/10 text-white hover:text-white"
             >
               <Filter className="h-4 w-4 mr-1" />
               {activeFiltersCount > 0 && (
-                <Badge className="ml-1 h-5 w-5 p-0 text-xs bg-purple-500">
+                <Badge className="ml-1 h-5 w-5 p-0 text-xs bg-purple-500 text-white">
                   {activeFiltersCount}
                 </Badge>
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 glass-morphism border-white/20 p-0">
+          <PopoverContent className="w-80 huly-glass border-white/20 p-0 bg-card/95 backdrop-blur-md z-50">
             <Card className="border-0 bg-transparent">
               <CardContent className="p-6 space-y-6">
                 <div className="flex items-center justify-between">
@@ -92,7 +92,7 @@ const EnhancedSearch = ({
                       variant="ghost"
                       size="sm"
                       onClick={clearAllFilters}
-                      className="text-purple-400 hover:text-purple-300"
+                      className="text-purple-400 hover:text-purple-300 hover:bg-white/10"
                     >
                       Clear All
                     </Button>

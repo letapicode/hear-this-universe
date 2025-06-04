@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
+import { useCreateDownload } from "@/hooks/useDownloads";
+import { toast } from "sonner";
 
 interface EnhancedContentCardProps {
   content: {
@@ -36,6 +38,22 @@ const EnhancedContentCard = ({
   const [isLiked, setIsLiked] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const isPlaying = currentlyPlaying?.id === content.id;
+  const createDownload = useCreateDownload();
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      // For demo purposes, we'll use the content ID as both episode and series ID
+      await createDownload.mutateAsync({ 
+        episodeId: content.id, 
+        seriesId: content.id 
+      });
+      toast.success(`"${content.title}" download started!`);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to start download. Please try again.');
+    }
+  };
 
   const sizeClasses = {
     small: {
@@ -83,9 +101,9 @@ const EnhancedContentCard = ({
             <Button
               onClick={() => onPlay(content)}
               size="icon"
-              className="huly-gradient hover:scale-110 text-white rounded-full w-12 h-12 huly-shadow-lg transition-all duration-200"
+              className="huly-gradient hover:scale-110 text-white rounded-full w-12 h-12 huly-shadow-lg transition-all duration-200 border-0"
             >
-              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+              {isPlaying ? <Pause className="h-6 w-6 text-white" /> : <Play className="h-6 w-6 text-white" />}
             </Button>
           </div>
           
@@ -114,21 +132,23 @@ const EnhancedContentCard = ({
                 e.stopPropagation();
                 setIsLiked(!isLiked);
               }}
-              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full"
+              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full text-white hover:text-white"
             >
               <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full text-white"
+              onClick={handleDownload}
+              disabled={createDownload.isPending}
+              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full text-white hover:text-white"
             >
-              <Download className="h-4 w-4" />
+              <Download className={`h-4 w-4 ${createDownload.isPending ? 'animate-pulse' : ''}`} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full text-white"
+              className="w-8 h-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full text-white hover:text-white"
             >
               <MoreHorizontal className="h-4 w-4" />
             </Button>

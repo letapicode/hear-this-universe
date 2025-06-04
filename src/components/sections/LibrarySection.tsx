@@ -30,7 +30,7 @@ const LibrarySection = ({ filteredContent, onPlay, currentlyPlaying }: LibrarySe
             <Button
               variant="outline"
               size="sm"
-              className="huly-glass border-white/10"
+              className="huly-glass border-white/10 text-white hover:bg-white/10 hover:text-white"
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters
@@ -41,7 +41,7 @@ const LibrarySection = ({ filteredContent, onPlay, currentlyPlaying }: LibrarySe
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('grid')}
-                className="w-8 h-8 p-0"
+                className={`w-8 h-8 p-0 ${viewMode === 'grid' ? 'huly-gradient text-white border-0' : 'text-white hover:bg-white/10 hover:text-white'}`}
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
@@ -49,7 +49,7 @@ const LibrarySection = ({ filteredContent, onPlay, currentlyPlaying }: LibrarySe
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('list')}
-                className="w-8 h-8 p-0"
+                className={`w-8 h-8 p-0 ${viewMode === 'list' ? 'huly-gradient text-white border-0' : 'text-white hover:bg-white/10 hover:text-white'}`}
               >
                 <List className="h-4 w-4" />
               </Button>
