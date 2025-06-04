@@ -16,23 +16,23 @@ const PlayerControls = ({ isPlaying, onPlayPause, onSkipForward, onSkipBack }: P
         variant="ghost"
         size="sm"
         onClick={onSkipBack}
-        className="text-white hover:text-purple-400 transition-colors"
+        className="text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
       >
         <SkipBack className="h-6 w-6" />
       </Button>
       
       <Button
         onClick={onPlayPause}
-        className="luxury-gradient hover:scale-105 rounded-full w-16 h-16 luxury-shadow transition-all duration-300"
+        className="huly-gradient hover:scale-105 rounded-full w-16 h-16 huly-shadow transition-all duration-300 text-white border-0"
       >
-        {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
+        {isPlaying ? <Pause className="h-8 w-8 text-white" /> : <Play className="h-8 w-8 text-white ml-1" />}
       </Button>
       
       <Button
         variant="ghost"
         size="sm"
         onClick={onSkipForward}
-        className="text-white hover:text-purple-400 transition-colors"
+        className="text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
       >
         <SkipForward className="h-6 w-6" />
       </Button>

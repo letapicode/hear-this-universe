@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Settings, RotateCcw, List } from "lucide-react";
+import { X, Settings, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
@@ -11,6 +10,7 @@ import VolumeControl from "./player/VolumeControl";
 import SpeedControl from "./player/SpeedControl";
 import BookmarkManager from "./player/BookmarkManager";
 import SleepTimer from "./player/SleepTimer";
+import ProgressBar from "./player/ProgressBar";
 
 interface AudioPlayerProps {
   content: {
@@ -40,6 +40,7 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
   const [showSettings, setShowSettings] = useState(false);
   const [bookmarks, setBookmarks] = useState<BookmarkData[]>([]);
   const [lastPosition, setLastPosition] = useState(0);
+  const [buffered, setBuffered] = useState(0);
   
   const sleepTimerRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
@@ -99,11 +100,10 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleSeek = (value: number[]) => {
-    const newTime = value[0];
-    setCurrentTime(newTime);
+  const handleSeek = (time: number) => {
+    setCurrentTime(time);
     if (autoSave) {
-      localStorage.setItem(`audio_progress_${content.id}`, newTime.toString());
+      localStorage.setItem(`audio_progress_${content.id}`, time.toString());
     }
   };
 
@@ -154,26 +154,24 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
     }
   };
 
-  const progressPercentage = (currentTime / duration) * 100;
-
   return (
-    <Card className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl z-50 luxury-shadow">
+    <Card className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl z-50 huly-shadow-lg">
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 luxury-gradient rounded-xl flex items-center justify-center luxury-shadow">
+            <div className="w-16 h-16 huly-gradient rounded-xl flex items-center justify-center huly-shadow">
               <div className="w-12 h-12 bg-white/20 rounded-lg animate-pulse"></div>
             </div>
             <div>
               <h4 className="font-semibold text-white text-lg">{content.title}</h4>
-              <p className="text-sm text-gray-300">{content.author}</p>
+              <p className="text-sm text-white/70">{content.author}</p>
               {lastPosition > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={resumeFromLastPosition}
-                  className="text-xs text-purple-400 hover:text-purple-300 p-0 h-auto mt-1"
+                  className="text-xs text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 p-0 h-auto mt-1"
                 >
                   <RotateCcw className="h-3 w-3 mr-1" />
                   Resume from {formatTime(lastPosition)}
@@ -185,46 +183,44 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
           <div className="flex items-center space-x-2">
             <Popover open={showSettings} onOpenChange={setShowSettings}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
+                >
                   <Settings className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 glass-morphism border-white/20">
+              <PopoverContent className="w-80 huly-glass border-white/20">
                 <div className="space-y-4">
                   <h4 className="font-semibold text-white">Player Settings</h4>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">Auto-save progress</span>
+                    <span className="text-sm text-white/70">Auto-save progress</span>
                     <Switch checked={autoSave} onCheckedChange={setAutoSave} />
                   </div>
                 </div>
               </PopoverContent>
             </Popover>
 
-            <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-300 hover:text-white">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onClose} 
+              className="text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Enhanced Progress Bar */}
         <div className="mb-6">
-          <div className="relative">
-            <Slider
-              value={[currentTime]}
-              max={duration}
-              step={1}
-              onValueChange={handleSeek}
-              className="w-full"
-            />
-            <div 
-              className="absolute top-1/2 left-0 h-1 luxury-gradient rounded-full -translate-y-1/2 pointer-events-none"
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-gray-400 mt-2">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
+          <ProgressBar
+            currentTime={currentTime}
+            duration={duration}
+            onSeek={handleSeek}
+            buffered={buffered}
+          />
         </div>
 
         {/* Main Controls */}
@@ -238,7 +234,7 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
         </div>
 
         {/* Secondary Controls */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 gap-4">
           <SpeedControl
             playbackSpeed={playbackSpeed}
             onSpeedChange={handleSpeedChange}
@@ -256,7 +252,7 @@ const AudioPlayer = ({ content, isPlaying, onPlayPause, onClose }: AudioPlayerPr
           />
         </div>
 
-        {/* Bookmarks */}
+        {/* Enhanced Bookmarks */}
         <BookmarkManager
           bookmarks={bookmarks}
           currentTime={currentTime}

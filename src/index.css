@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -189,6 +188,7 @@
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
   }
 
   .huly-button:hover {
@@ -214,11 +214,17 @@
   .huly-input {
     @apply huly-glass rounded-lg border-0 px-4 py-3 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:outline-none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
   }
 
   .huly-input:focus {
     @apply huly-shadow-hover;
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .huly-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
   }
 
   .particles {
@@ -360,4 +366,38 @@
 
 .huly-grid-lg {
   @apply grid gap-12;
+}
+
+/* Player specific styles */
+.player-button {
+  @apply text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200;
+}
+
+.player-button-primary {
+  @apply huly-gradient text-white border-0 hover:scale-105 transition-all duration-200;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.player-button-primary:hover {
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+}
+
+/* Enhanced slider styles for player */
+.player-slider .slider-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.player-slider .slider-range {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.player-slider .slider-thumb {
+  background: white;
+  border: 2px solid #6366f1;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.player-slider .slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
 }
