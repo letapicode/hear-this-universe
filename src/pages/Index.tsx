@@ -10,12 +10,17 @@ import SearchAndFiltersSection from "@/components/sections/SearchAndFiltersSecti
 import StatsSection from "@/components/sections/StatsSection";
 import LibrarySection from "@/components/sections/LibrarySection";
 import PlayerManager from "@/components/PlayerManager";
+import MoodDiscovery from "@/components/MoodDiscovery";
+import UserPreferences from "@/components/UserPreferences";
+import AIInsightsDashboard from "@/components/AIInsightsDashboard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories, useSeries } from "@/hooks/useContentData";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useListeningHistory } from "@/hooks/useListeningHistory";
 import { useContentFiltering } from "@/hooks/useContentFiltering";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Brain, Home, Settings, BarChart3 } from "lucide-react";
 
 interface SearchFilters {
   categories: string[];
@@ -31,6 +36,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showChapters, setShowChapters] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [activeTab, setActiveTab] = useState("home");
   const [filters, setFilters] = useState<SearchFilters>({
     categories: [],
     isPremium: undefined,
@@ -118,35 +124,108 @@ const Index = () => {
         onSignOut={handleSignOut}
       />
 
-      <HeroSection 
-        user={user}
-        featuredContent={featuredContent}
-        onPlay={handlePlay}
-      />
+      <div className="container mx-auto px-8 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="huly-glass border-white/20 p-1 mb-8">
+            <TabsTrigger 
+              value="home" 
+              className="data-[state=active]:huly-gradient data-[state=active]:text-white data-[state=active]:border-0 px-6 py-3 text-base font-medium flex items-center gap-2"
+            >
+              <Home className="h-4 w-4" />
+              Home
+            </TabsTrigger>
+            <TabsTrigger 
+              value="ai-discovery" 
+              className="data-[state=active]:huly-gradient data-[state=active]:text-white data-[state=active]:border-0 px-6 py-3 text-base font-medium flex items-center gap-2"
+            >
+              <Brain className="h-4 w-4" />
+              AI Discovery
+            </TabsTrigger>
+            <TabsTrigger 
+              value="insights" 
+              className="data-[state=active]:huly-gradient data-[state=active]:text-white data-[state=active]:border-0 px-6 py-3 text-base font-medium flex items-center gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              AI Insights
+            </TabsTrigger>
+            <TabsTrigger 
+              value="preferences" 
+              className="data-[state=active]:huly-gradient data-[state=active]:text-white data-[state=active]:border-0 px-6 py-3 text-base font-medium flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Preferences
+            </TabsTrigger>
+          </TabsList>
 
-      <StatsSection onPlay={handlePlay} />
+          <TabsContent value="home" className="space-y-12">
+            <HeroSection 
+              user={user}
+              featuredContent={featuredContent}
+              onPlay={handlePlay}
+            />
 
-      <SearchAndFiltersSection
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        filters={filters}
-        onFiltersChange={setFilters}
-        availableCategories={categoryNames}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
-      />
+            <StatsSection onPlay={handlePlay} />
 
-      <LibrarySection
-        filteredContent={filteredContent}
-        onPlay={handlePlay}
-        currentlyPlaying={audioPlayer.currentContent}
-      />
+            <SearchAndFiltersSection
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              filters={filters}
+              onFiltersChange={setFilters}
+              availableCategories={categoryNames}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+            />
 
-      <TrendingSection 
-        trendingContent={trendingContent}
-        onPlay={handlePlay}
-        currentlyPlaying={audioPlayer.currentContent}
-      />
+            <LibrarySection
+              filteredContent={filteredContent}
+              onPlay={handlePlay}
+              currentlyPlaying={audioPlayer.currentContent}
+            />
+
+            <TrendingSection 
+              trendingContent={trendingContent}
+              onPlay={handlePlay}
+              currentlyPlaying={audioPlayer.currentContent}
+            />
+          </TabsContent>
+
+          <TabsContent value="ai-discovery" className="space-y-8">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold huly-gradient-text mb-4">
+                AI-Powered Discovery
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Let our AI understand your mood and preferences to find perfect content for any moment
+              </p>
+            </div>
+            <MoodDiscovery onContentSelect={handlePlay} />
+          </TabsContent>
+
+          <TabsContent value="insights" className="space-y-8">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold huly-gradient-text mb-4">
+                AI Insights Dashboard
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Discover patterns in your listening habits and AI recommendation performance
+              </p>
+            </div>
+            <AIInsightsDashboard />
+          </TabsContent>
+
+          <TabsContent value="preferences" className="space-y-8">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold huly-gradient-text mb-4">
+                AI Preferences
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Customize how our AI learns from your behavior and generates recommendations
+              </p>
+            </div>
+            <UserPreferences />
+          </TabsContent>
+        </Tabs>
+      </div>
 
       <KeyboardShortcutsHelp />
 

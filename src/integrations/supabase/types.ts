@@ -9,6 +9,53 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_recommendations: {
+        Row: {
+          clicked: boolean | null
+          confidence_score: number | null
+          context_data: Json | null
+          created_at: string
+          dismissed: boolean | null
+          id: string
+          reasoning: string | null
+          recommendation_type: string
+          series_id: string | null
+          user_id: string
+        }
+        Insert: {
+          clicked?: boolean | null
+          confidence_score?: number | null
+          context_data?: Json | null
+          created_at?: string
+          dismissed?: boolean | null
+          id?: string
+          reasoning?: string | null
+          recommendation_type: string
+          series_id?: string | null
+          user_id: string
+        }
+        Update: {
+          clicked?: boolean | null
+          confidence_score?: number | null
+          context_data?: Json | null
+          created_at?: string
+          dismissed?: boolean | null
+          id?: string
+          reasoning?: string | null
+          recommendation_type?: string
+          series_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_recommendations_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookmarks: {
         Row: {
           created_at: string
@@ -239,6 +286,45 @@ export type Database = {
           },
         ]
       }
+      mood_sessions: {
+        Row: {
+          activity: string | null
+          content_consumed: string[] | null
+          created_at: string
+          id: string
+          mood: string
+          satisfaction_rating: number | null
+          session_duration: number | null
+          time_of_day: string | null
+          user_id: string
+          weather: string | null
+        }
+        Insert: {
+          activity?: string | null
+          content_consumed?: string[] | null
+          created_at?: string
+          id?: string
+          mood: string
+          satisfaction_rating?: number | null
+          session_duration?: number | null
+          time_of_day?: string | null
+          user_id: string
+          weather?: string | null
+        }
+        Update: {
+          activity?: string | null
+          content_consumed?: string[] | null
+          created_at?: string
+          id?: string
+          mood?: string
+          satisfaction_rating?: number | null
+          session_duration?: number | null
+          time_of_day?: string | null
+          user_id?: string
+          weather?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -363,6 +449,42 @@ export type Database = {
           },
         ]
       }
+      smart_playlists: {
+        Row: {
+          ai_criteria: Json
+          auto_update: boolean | null
+          content_ids: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          last_updated: string | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          ai_criteria: Json
+          auto_update?: boolean | null
+          content_ids?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_updated?: string | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          ai_criteria?: Json
+          auto_update?: boolean | null
+          content_ids?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_updated?: string | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -452,6 +574,42 @@ export type Database = {
           stripe_price_id_monthly?: string | null
           stripe_price_id_yearly?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          ai_recommendation_settings: Json | null
+          created_at: string
+          id: string
+          listening_goals: string | null
+          mood_preferences: Json | null
+          preferred_authors: string[] | null
+          preferred_genres: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_recommendation_settings?: Json | null
+          created_at?: string
+          id?: string
+          listening_goals?: string | null
+          mood_preferences?: Json | null
+          preferred_authors?: string[] | null
+          preferred_genres?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_recommendation_settings?: Json | null
+          created_at?: string
+          id?: string
+          listening_goals?: string | null
+          mood_preferences?: Json | null
+          preferred_authors?: string[] | null
+          preferred_genres?: string[] | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
