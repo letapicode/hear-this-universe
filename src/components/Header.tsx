@@ -57,14 +57,14 @@ const Header = ({ user, searchQuery, onSearchChange, onSignOut }: HeaderProps) =
               <DropdownMenuContent className="huly-glass border-white/20 huly-shadow-lg rounded-xl p-2 min-w-48 bg-card/95 backdrop-blur-md z-50">
                 <DropdownMenuItem 
                   onClick={() => navigate("/profile")}
-                  className="hover:bg-white/10 text-foreground px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer"
+                  className="hover:bg-primary/20 hover:text-foreground text-foreground px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer focus:bg-primary/20 focus:text-foreground"
                 >
                   <UserCircle className="h-5 w-5 mr-3" />
                   Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={onSignOut} 
-                  className="hover:bg-white/10 text-foreground px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer"
+                  className="hover:bg-primary/20 hover:text-foreground text-foreground px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer focus:bg-primary/20 focus:text-foreground"
                 >
                   <LogOut className="h-5 w-5 mr-3" />
                   Sign Out
