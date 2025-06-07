@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +15,7 @@ import {
   Volume2, 
   Zap,
   Sliders,
-  Waveform
+  AudioWaveform
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -321,7 +320,7 @@ const AudioRemixStudio = () => {
           <Card className="huly-glass border-white/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Waveform className="h-5 w-5" />
+                <AudioWaveform className="h-5 w-5" />
                 Audio Visualization
               </CardTitle>
             </CardHeader>

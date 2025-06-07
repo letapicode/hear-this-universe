@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -14,6 +15,7 @@ import UserPreferences from "@/components/UserPreferences";
 import AIInsightsDashboard from "@/components/AIInsightsDashboard";
 import AIChatAssistant from "@/components/AIChatAssistant";
 import SmartBookmarks from "@/components/SmartBookmarks";
+import ContentCreationHub from "@/components/content-creation/ContentCreationHub";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories, useSeries } from "@/hooks/useContentData";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
