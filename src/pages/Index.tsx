@@ -21,8 +21,8 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useListeningHistory } from "@/hooks/useListeningHistory";
 import { useContentFiltering } from "@/hooks/useContentFiltering";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Brain, Home, Settings, BarChart3 } from "lucide-react";
-import Button from "@/components/Button";
 
 interface SearchFilters {
   categories: string[];
