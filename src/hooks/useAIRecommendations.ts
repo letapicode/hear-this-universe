@@ -46,9 +46,13 @@ export const useUpdateUserPreferences = () => {
 
   return useMutation({
     mutationFn: async (preferences: any) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data: existingPrefs } = await supabase
         .from('user_preferences')
         .select('*')
+        .eq('user_id', user.id)
         .single();
 
       if (existingPrefs) {
@@ -67,7 +71,10 @@ export const useUpdateUserPreferences = () => {
       } else {
         const { data, error } = await supabase
           .from('user_preferences')
-          .insert(preferences)
+          .insert({
+            ...preferences,
+            user_id: user.id
+          })
           .select()
           .single();
 
@@ -96,9 +103,15 @@ export const useCreateMoodSession = () => {
       time_of_day?: string;
       content_consumed?: string[];
     }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('mood_sessions')
-        .insert(session)
+        .insert({
+          ...session,
+          user_id: user.id
+        })
         .select()
         .single();
 

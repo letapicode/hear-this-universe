@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -13,6 +12,8 @@ import PlayerManager from "@/components/PlayerManager";
 import MoodDiscovery from "@/components/MoodDiscovery";
 import UserPreferences from "@/components/UserPreferences";
 import AIInsightsDashboard from "@/components/AIInsightsDashboard";
+import AIChatAssistant from "@/components/AIChatAssistant";
+import SmartBookmarks from "@/components/SmartBookmarks";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories, useSeries } from "@/hooks/useContentData";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
@@ -21,6 +22,7 @@ import { useListeningHistory } from "@/hooks/useListeningHistory";
 import { useContentFiltering } from "@/hooks/useContentFiltering";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Brain, Home, Settings, BarChart3 } from "lucide-react";
+import Button from "@/components/Button";
 
 interface SearchFilters {
   categories: string[];
@@ -43,6 +45,8 @@ const Index = () => {
     rating: undefined,
     duration: undefined
   });
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [aiChatMinimized, setAIChatMinimized] = useState(true);
 
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const { data: series = [], isLoading: seriesLoading } = useSeries();
@@ -187,6 +191,17 @@ const Index = () => {
               onPlay={handlePlay}
               currentlyPlaying={audioPlayer.currentContent}
             />
+
+            {/* Smart Bookmarks Section */}
+            {audioPlayer.currentContent && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <SmartBookmarks
+                  currentContent={audioPlayer.currentContent}
+                  currentTime={audioPlayer.currentTime}
+                  onSeekTo={audioPlayer.seekTo}
+                />
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="ai-discovery" className="space-y-8">
@@ -240,6 +255,26 @@ const Index = () => {
         listeningHistory={listeningHistory}
         onMinimize={setIsMinimized}
       />
+
+      {/* AI Chat Assistant */}
+      {audioPlayer.currentContent && (
+        <AIChatAssistant
+          currentContent={audioPlayer.currentContent}
+          currentTime={audioPlayer.currentTime}
+          isMinimized={aiChatMinimized}
+          onToggleMinimize={() => setAIChatMinimized(!aiChatMinimized)}
+        />
+      )}
+
+      {/* Toggle AI Chat Button */}
+      {audioPlayer.currentContent && aiChatMinimized && (
+        <Button
+          onClick={() => setAIChatMinimized(false)}
+          className="fixed bottom-4 left-4 huly-gradient text-white border-0 rounded-full w-12 h-12 p-0 z-50"
+        >
+          <Brain className="h-5 w-5" />
+        </Button>
+      )}
     </div>
   );
 };
