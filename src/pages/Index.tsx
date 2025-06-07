@@ -22,7 +22,7 @@ import { useListeningHistory } from "@/hooks/useListeningHistory";
 import { useContentFiltering } from "@/hooks/useContentFiltering";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Brain, Home, Settings, BarChart3 } from "lucide-react";
+import { Brain, Home, Settings, BarChart3, Sparkles } from "lucide-react";
 
 interface SearchFilters {
   categories: string[];
@@ -146,6 +146,13 @@ const Index = () => {
               AI Discovery
             </TabsTrigger>
             <TabsTrigger 
+              value="content-creation" 
+              className="data-[state=active]:huly-gradient data-[state=active]:text-white data-[state=active]:border-0 px-6 py-3 text-base font-medium flex items-center gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Create Content
+            </TabsTrigger>
+            <TabsTrigger 
               value="insights" 
               className="data-[state=active]:huly-gradient data-[state=active]:text-white data-[state=active]:border-0 px-6 py-3 text-base font-medium flex items-center gap-2"
             >
@@ -214,6 +221,10 @@ const Index = () => {
               </p>
             </div>
             <MoodDiscovery onContentSelect={handlePlay} />
+          </TabsContent>
+
+          <TabsContent value="content-creation" className="space-y-8">
+            <ContentCreationHub />
           </TabsContent>
 
           <TabsContent value="insights" className="space-y-8">
