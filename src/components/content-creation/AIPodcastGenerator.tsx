@@ -8,11 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Mic, Play, Download, Sparkles, Video, Youtube } from "lucide-react";
+import { Loader2, Mic, Play, Download, Sparkles, Video, Youtube, Library } from "lucide-react";
 import { toast } from "sonner";
 import VideoGenerator from "./VideoGenerator";
 import YouTubeUploader from "./YouTubeUploader";
 import DownloadManager from "./DownloadManager";
+import ContentLibrary from "./content-library/ContentLibrary";
 
 interface PodcastSettings {
   topic: string;
@@ -32,6 +33,20 @@ interface GeneratedVideo {
   duration: number;
 }
 
+interface GeneratedContent {
+  id: string;
+  type: 'podcast' | 'video';
+  title: string;
+  description: string;
+  audioUrl?: string;
+  videoUrl?: string;
+  thumbnailUrl: string;
+  duration: number;
+  createdAt: string;
+  tags: string[];
+  youtubeUrl?: string;
+}
+
 const AIPodcastGenerator = () => {
   const [settings, setSettings] = useState<PodcastSettings>({
     topic: "",
@@ -45,6 +60,7 @@ const AIPodcastGenerator = () => {
   const [audioUrl, setAudioUrl] = useState("");
   const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideo | null>(null);
   const [activeTab, setActiveTab] = useState("script");
+  const [savedContents, setSavedContents] = useState<GeneratedContent[]>([]);
 
   const handleGenerate = async () => {
     if (!settings.topic.trim()) {
@@ -54,7 +70,6 @@ const AIPodcastGenerator = () => {
 
     setIsGenerating(true);
     try {
-      // Mock AI generation process
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       const mockScript = `Welcome to AI Generated Podcast about "${settings.topic}".
@@ -83,10 +98,25 @@ HOST 1: Excellent point! Thank you all for listening, and we'll see you in the n
 
       setGeneratedScript(mockScript);
       
-      // Mock audio generation
       setTimeout(() => {
-        setAudioUrl("https://www.soundjay.com/misc/sounds/bell-ringing-05.wav");
-        toast.success("Podcast generated successfully!");
+        const mockAudioUrl = "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav";
+        setAudioUrl(mockAudioUrl);
+        
+        // Save the generated content
+        const newContent: GeneratedContent = {
+          id: Date.now().toString(),
+          type: 'podcast',
+          title: `Podcast: ${settings.topic}`,
+          description: `An AI-generated podcast about ${settings.topic}`,
+          audioUrl: mockAudioUrl,
+          thumbnailUrl: "https://picsum.photos/1280/720",
+          duration: parseInt(settings.duration) * 60,
+          createdAt: new Date().toISOString(),
+          tags: ['podcast', 'ai-generated', settings.topic.toLowerCase()]
+        };
+        
+        setSavedContents(prev => [newContent, ...prev]);
+        toast.success("Podcast generated and saved successfully!");
         setActiveTab("video");
       }, 2000);
 
@@ -99,7 +129,41 @@ HOST 1: Excellent point! Thank you all for listening, and we'll see you in the n
 
   const handleVideoGenerated = (video: GeneratedVideo) => {
     setGeneratedVideo(video);
+    
+    // Update the saved content with video info
+    setSavedContents(prev => prev.map(content => {
+      if (content.type === 'podcast' && content.title === `Podcast: ${settings.topic}`) {
+        return {
+          ...content,
+          type: 'video' as const,
+          videoUrl: video.videoUrl,
+          thumbnailUrl: video.thumbnailUrl
+        };
+      }
+      return content;
+    }));
+    
     setActiveTab("download");
+  };
+
+  const handleYouTubeUpload = (youtubeUrl: string) => {
+    setSavedContents(prev => prev.map(content => {
+      if (content.videoUrl === generatedVideo?.videoUrl) {
+        return { ...content, youtubeUrl };
+      }
+      return content;
+    }));
+  };
+
+  const handleDeleteContent = (id: string) => {
+    setSavedContents(prev => prev.filter(content => content.id !== id));
+  };
+
+  const handlePlayContent = (content: GeneratedContent) => {
+    // Implement play functionality
+    if (content.audioUrl) {
+      window.open(content.audioUrl, '_blank');
+    }
   };
 
   return (
@@ -173,7 +237,7 @@ HOST 1: Excellent point! Thank you all for listening, and we'll see you in the n
           <Button 
             onClick={handleGenerate} 
             disabled={isGenerating || !settings.topic.trim()}
-            className="w-full huly-gradient text-white border-0"
+            className="w-full huly-gradient text-white border-0 hover:opacity-90"
           >
             {isGenerating ? (
               <>
@@ -206,6 +270,10 @@ HOST 1: Excellent point! Thank you all for listening, and we'll see you in the n
               <Download className="h-4 w-4 mr-2" />
               Downloads
             </TabsTrigger>
+            <TabsTrigger value="library" className="flex-1">
+              <Library className="h-4 w-4 mr-2" />
+              My Content
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="script" className="space-y-4">
@@ -235,13 +303,16 @@ HOST 1: Excellent point! Thank you all for listening, and we'll see you in the n
                     </audio>
                     
                     <div className="flex gap-2">
-                      <Button variant="outline" className="border-white/20">
+                      <Button 
+                        variant="outline" 
+                        className="border-white/20 hover:bg-white/10 hover:text-white"
+                      >
                         <Play className="h-4 w-4 mr-2" />
                         Preview
                       </Button>
                       <Button 
                         onClick={() => setActiveTab("video")}
-                        className="huly-gradient text-white border-0"
+                        className="huly-gradient text-white border-0 hover:opacity-90"
                       >
                         <Video className="h-4 w-4 mr-2" />
                         Create Video
@@ -267,6 +338,7 @@ HOST 1: Excellent point! Thank you all for listening, and we'll see you in the n
               <YouTubeUploader
                 video={generatedVideo}
                 podcastScript={generatedScript}
+                onUploadSuccess={handleYouTubeUpload}
               />
             )}
           </TabsContent>
@@ -286,6 +358,14 @@ HOST 1: Excellent point! Thank you all for listening, and we'll see you in the n
                 audioUrl={audioUrl}
               />
             )}
+          </TabsContent>
+
+          <TabsContent value="library" className="space-y-4">
+            <ContentLibrary
+              contents={savedContents}
+              onDelete={handleDeleteContent}
+              onPlay={handlePlayContent}
+            />
           </TabsContent>
         </Tabs>
       )}

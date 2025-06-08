@@ -2,19 +2,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Download, 
-  FileVideo, 
-  FileAudio, 
-  Image,
-  CheckCircle,
-  Loader2,
-  HardDrive
-} from "lucide-react";
+import { Download, HardDrive } from "lucide-react";
 import { toast } from "sonner";
+import DownloadSection from "./download/DownloadSection";
 
 interface DownloadOption {
   type: 'video' | 'audio' | 'thumbnail';
@@ -96,66 +87,38 @@ const DownloadManager = ({ video, audioUrl }: DownloadManagerProps) => {
     }
   ];
 
-  const handleDownload = async (option: DownloadOption) => {
-    const downloadId = `${option.type}-${option.format}-${option.quality}`;
-    
-    if (!option.url) {
-      toast.error("Download URL not available");
-      return;
-    }
+  const handleDownloadComplete = (downloadId: string) => {
+    setCompletedDownloads(prev => new Set([...prev, downloadId]));
+  };
 
-    setDownloading(downloadId);
+  const handleDownloadAll = async () => {
+    setDownloading('all');
     setDownloadProgress(0);
 
     try {
-      // Simulate download progress
-      for (let i = 0; i <= 100; i += 10) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-        setDownloadProgress(i);
+      const validOptions = downloadOptions.filter(option => 
+        option.url && (option.type !== 'audio' || audioUrl)
+      );
+
+      for (let i = 0; i < validOptions.length; i++) {
+        const option = validOptions[i];
+        const link = document.createElement('a');
+        link.href = option.url;
+        link.download = `${video.title}.${option.format.toLowerCase()}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        setDownloadProgress(((i + 1) / validOptions.length) * 100);
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      // Create download link
-      const link = document.createElement('a');
-      link.href = option.url;
-      link.download = `${video.title}.${option.format.toLowerCase()}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      setCompletedDownloads(prev => new Set([...prev, downloadId]));
-      toast.success(`${option.type} downloaded successfully!`);
-
+      toast.success("All files downloaded successfully!");
     } catch (error) {
       toast.error("Download failed");
     } finally {
       setDownloading(null);
       setDownloadProgress(0);
-    }
-  };
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'video':
-        return <FileVideo className="h-4 w-4" />;
-      case 'audio':
-        return <FileAudio className="h-4 w-4" />;
-      case 'thumbnail':
-        return <Image className="h-4 w-4" />;
-      default:
-        return <Download className="h-4 w-4" />;
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'video':
-        return 'bg-blue-500/20 text-blue-400';
-      case 'audio':
-        return 'bg-green-500/20 text-green-400';
-      case 'thumbnail':
-        return 'bg-purple-500/20 text-purple-400';
-      default:
-        return 'bg-gray-500/20 text-gray-400';
     }
   };
 
@@ -177,71 +140,21 @@ const DownloadManager = ({ video, audioUrl }: DownloadManagerProps) => {
       </CardHeader>
       <CardContent className="space-y-6">
         {Object.entries(groupedOptions).map(([type, options]) => (
-          <div key={type} className="space-y-3">
-            <h3 className="text-lg font-semibold capitalize flex items-center gap-2">
-              {getIcon(type)}
-              {type} Files
-            </h3>
-            
-            <div className="grid gap-3">
-              {options.map((option, index) => {
-                const downloadId = `${option.type}-${option.format}-${option.quality}`;
-                const isDownloading = downloading === downloadId;
-                const isCompleted = completedDownloads.has(downloadId);
-                const isDisabled = !option.url || (option.type === 'audio' && !audioUrl);
-
-                return (
-                  <div 
-                    key={index}
-                    className="flex items-center justify-between p-4 huly-glass border border-white/10 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Badge className={getTypeColor(option.type)}>
-                        {option.format}
-                      </Badge>
-                      <div>
-                        <div className="font-medium">{option.quality}</div>
-                        <div className="text-sm text-muted-foreground">{option.size}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {isCompleted && (
-                        <CheckCircle className="h-5 w-5 text-green-400" />
-                      )}
-                      
-                      <Button
-                        onClick={() => handleDownload(option)}
-                        disabled={isDownloading || isDisabled}
-                        variant="outline"
-                        size="sm"
-                        className="border-white/20"
-                      >
-                        {isDownloading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            {downloadProgress}%
-                          </>
-                        ) : (
-                          <>
-                            <Download className="h-4 w-4 mr-2" />
-                            Download
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <DownloadSection
+            key={type}
+            type={type}
+            options={options}
+            title={video.title}
+            audioUrl={audioUrl}
+            onDownloadComplete={handleDownloadComplete}
+          />
         ))}
 
-        {downloading && (
+        {downloading === 'all' && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Downloading...</span>
-              <span>{downloadProgress}%</span>
+              <span>Downloading all files...</span>
+              <span>{Math.round(downloadProgress)}%</span>
             </div>
             <Progress value={downloadProgress} className="w-full" />
           </div>
@@ -249,16 +162,9 @@ const DownloadManager = ({ video, audioUrl }: DownloadManagerProps) => {
 
         <div className="pt-4 border-t border-white/10">
           <Button
-            onClick={() => {
-              // Download all available files
-              downloadOptions.forEach(option => {
-                if (option.url && (option.type !== 'audio' || audioUrl)) {
-                  setTimeout(() => handleDownload(option), Math.random() * 1000);
-                }
-              });
-            }}
-            className="w-full huly-gradient text-white border-0"
-            disabled={!!downloading}
+            onClick={handleDownloadAll}
+            className="w-full huly-gradient text-white border-0 hover:opacity-90"
+            disabled={downloading === 'all'}
           >
             <Download className="h-4 w-4 mr-2" />
             Download All Files
