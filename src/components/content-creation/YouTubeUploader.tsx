@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import YouTubeAuth from "./youtube/YouTubeAuth";
+import { useYouTubeAuth } from "@/hooks/useYouTubeAuth";
 
 interface YouTubeSettings {
   title: string;
@@ -49,12 +51,10 @@ interface YouTubeUploaderProps {
 }
 
 const YouTubeUploader = ({ video, podcastScript, onUploadSuccess }: YouTubeUploaderProps) => {
-  const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedUrl, setUploadedUrl] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [accessToken, setAccessToken] = useState("");
+  const { isConnected, uploadVideo, isLoading } = useYouTubeAuth();
+  
   const [settings, setSettings] = useState<YouTubeSettings>({
     title: video.title,
     description: `${video.description}\n\nGenerated using AI technology.\n\nTranscript:\n${podcastScript.substring(0, 500)}...`,
@@ -83,11 +83,6 @@ const YouTubeUploader = ({ video, podcastScript, onUploadSuccess }: YouTubeUploa
     { id: '28', name: 'Science & Technology' }
   ];
 
-  const handleAuthSuccess = (token: string) => {
-    setAccessToken(token);
-    setIsAuthenticated(true);
-  };
-
   const generateThumbnail = async () => {
     setIsGeneratingThumbnail(true);
     try {
@@ -105,38 +100,24 @@ const YouTubeUploader = ({ video, podcastScript, onUploadSuccess }: YouTubeUploa
   };
 
   const uploadToYouTube = async () => {
-    if (!isAuthenticated) {
+    if (!isConnected) {
       toast.error("Please connect your YouTube account first");
       return;
     }
 
-    setIsUploading(true);
-    setUploadProgress(0);
-
     try {
-      const steps = [
-        { progress: 20, message: "Preparing video file..." },
-        { progress: 40, message: "Uploading to YouTube..." },
-        { progress: 60, message: "Processing video..." },
-        { progress: 80, message: "Setting metadata..." },
-        { progress: 100, message: "Upload complete!" }
-      ];
+      const result = await uploadVideo(video.id, {
+        title: settings.title,
+        description: settings.description,
+        tags: settings.tags,
+        privacy: settings.privacy,
+        thumbnail: settings.thumbnail,
+      });
 
-      for (const step of steps) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setUploadProgress(step.progress);
-        toast.info(step.message);
-      }
-
-      const mockUrl = `https://www.youtube.com/watch?v=${Math.random().toString(36).substring(7)}`;
-      setUploadedUrl(mockUrl);
-      onUploadSuccess?.(mockUrl);
-      toast.success("Video uploaded to YouTube successfully!");
-
+      setUploadedUrl(result.youtubeUrl);
+      onUploadSuccess?.(result.youtubeUrl);
     } catch (error) {
-      toast.error("Failed to upload to YouTube");
-    } finally {
-      setIsUploading(false);
+      console.error('Upload failed:', error);
     }
   };
 
@@ -159,10 +140,7 @@ const YouTubeUploader = ({ video, podcastScript, onUploadSuccess }: YouTubeUploa
   return (
     <div className="space-y-6">
       {/* YouTube Authentication */}
-      <YouTubeAuth 
-        onAuthSuccess={handleAuthSuccess}
-        isAuthenticated={isAuthenticated}
-      />
+      <YouTubeAuth />
 
       {/* Upload Interface */}
       <Card className="huly-glass border-white/10">
@@ -244,7 +222,7 @@ const YouTubeUploader = ({ video, podcastScript, onUploadSuccess }: YouTubeUploa
             </div>
           </div>
 
-          {/* Upload Settings - keeping existing structure but fixing button styles */}
+          {/* Upload Settings */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="space-y-2">
@@ -349,35 +327,23 @@ const YouTubeUploader = ({ video, podcastScript, onUploadSuccess }: YouTubeUploa
           {/* Upload Button and Progress */}
           <div className="space-y-4">
             {!uploadedUrl ? (
-              <>
-                <Button 
-                  onClick={uploadToYouTube}
-                  disabled={isUploading || !settings.title || !isAuthenticated}
-                  className="w-full huly-gradient text-white border-0 hover:opacity-90"
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Uploading to YouTube...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload to YouTube
-                    </>
-                  )}
-                </Button>
-
-                {isUploading && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Upload Progress</span>
-                      <span>{uploadProgress}%</span>
-                    </div>
-                    <Progress value={uploadProgress} className="w-full" />
-                  </div>
+              <Button 
+                onClick={uploadToYouTube}
+                disabled={isLoading || !settings.title || !isConnected}
+                className="w-full huly-gradient text-white border-0 hover:opacity-90"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Uploading to YouTube...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload to YouTube
+                  </>
                 )}
-              </>
+              </Button>
             ) : (
               <div className="text-center space-y-4">
                 <div className="flex items-center justify-center gap-2 text-green-400">

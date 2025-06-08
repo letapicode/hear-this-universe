@@ -11,17 +11,14 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Video, 
-  Image, 
-  Upload, 
-  Download, 
-  Youtube, 
   Sparkles,
-  Play,
   Loader2,
   Eye,
-  Settings
+  Settings,
+  Save
 } from "lucide-react";
 import { toast } from "sonner";
+import { useVideoStorage } from "@/hooks/useVideoStorage";
 
 interface VideoSettings {
   style: 'static' | 'animated' | 'slideshow';
@@ -59,6 +56,9 @@ const VideoGenerator = ({
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState("");
   const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideo | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { saveVideo } = useVideoStorage();
+  
   const [settings, setSettings] = useState<VideoSettings>({
     style: 'static',
     backgroundType: 'ai-generated',
@@ -127,6 +127,34 @@ const VideoGenerator = ({
     } finally {
       setIsGenerating(false);
       setCurrentStep("");
+    }
+  };
+
+  const handleSaveVideo = async () => {
+    if (!generatedVideo) return;
+
+    setIsSaving(true);
+    try {
+      await saveVideo({
+        title: generatedVideo.title,
+        description: generatedVideo.description,
+        videoUrl: generatedVideo.videoUrl,
+        audioUrl: podcastAudioUrl,
+        thumbnailUrl: generatedVideo.thumbnailUrl,
+        videoType: 'podcast',
+        durationSeconds: generatedVideo.duration,
+        tags: generatedVideo.tags,
+        metadata: {
+          settings,
+          podcastScript: podcastScript.substring(0, 1000), // Save truncated script
+        },
+      });
+      
+      toast.success("Video saved to your library!");
+    } catch (error) {
+      console.error('Error saving video:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -243,7 +271,7 @@ const VideoGenerator = ({
               <Button 
                 onClick={generateVideo}
                 disabled={isGenerating || !podcastAudioUrl}
-                className="w-full huly-gradient text-white border-0"
+                className="w-full huly-gradient text-white border-0 hover:opacity-90"
               >
                 {isGenerating ? (
                   <>
@@ -302,6 +330,24 @@ const VideoGenerator = ({
                       </div>
                     </div>
                   </div>
+
+                  <Button
+                    onClick={handleSaveVideo}
+                    disabled={isSaving}
+                    className="w-full huly-gradient text-white border-0 hover:opacity-90"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving to Library...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save to Library
+                      </>
+                    )}
+                  </Button>
                 </div>
               )}
             </TabsContent>

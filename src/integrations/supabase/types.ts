@@ -245,6 +245,54 @@ export type Database = {
           },
         ]
       }
+      generated_videos: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          metadata: Json | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          video_type: string
+          video_url: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          metadata?: Json | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          video_type?: string
+          video_url?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          metadata?: Json | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          video_type?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       listening_progress: {
         Row: {
           completed: boolean | null
@@ -683,6 +731,86 @@ export type Database = {
             columns: ["series_id"]
             isOneToOne: false
             referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      youtube_connections: {
+        Row: {
+          access_token: string
+          channel_id: string | null
+          channel_name: string | null
+          connected_at: string
+          id: string
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          channel_id?: string | null
+          channel_name?: string | null
+          connected_at?: string
+          id?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          channel_id?: string | null
+          channel_name?: string | null
+          connected_at?: string
+          id?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      youtube_uploads: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          upload_status: string
+          uploaded_at: string | null
+          user_id: string
+          video_id: string
+          youtube_url: string | null
+          youtube_video_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          upload_status?: string
+          uploaded_at?: string | null
+          user_id: string
+          video_id: string
+          youtube_url?: string | null
+          youtube_video_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          upload_status?: string
+          uploaded_at?: string | null
+          user_id?: string
+          video_id?: string
+          youtube_url?: string | null
+          youtube_video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "youtube_uploads_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "generated_videos"
             referencedColumns: ["id"]
           },
         ]
