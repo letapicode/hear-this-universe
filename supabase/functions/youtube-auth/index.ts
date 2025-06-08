@@ -41,16 +41,26 @@ Deno.serve(async (req) => {
 
     if (action === 'getAuthUrl') {
       const clientId = Deno.env.get('YOUTUBE_CLIENT_ID')
-      const redirectUri = `${req.headers.get('origin')}/auth/youtube/callback`
+      
+      if (!clientId) {
+        console.error('YOUTUBE_CLIENT_ID environment variable is not set')
+        throw new Error('YouTube OAuth is not properly configured. Please contact support.')
+      }
+
+      const redirectUri = `${req.headers.get('origin') || 'http://localhost:3000'}/auth/youtube/callback`
+      
+      console.log('Creating auth URL with:', { clientId, redirectUri })
       
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
-      authUrl.searchParams.set('client_id', clientId || '')
+      authUrl.searchParams.set('client_id', clientId)
       authUrl.searchParams.set('redirect_uri', redirectUri)
       authUrl.searchParams.set('response_type', 'code')
       authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly')
       authUrl.searchParams.set('access_type', 'offline')
       authUrl.searchParams.set('prompt', 'consent')
       authUrl.searchParams.set('state', user.id)
+
+      console.log('Generated auth URL:', authUrl.toString())
 
       return new Response(
         JSON.stringify({ authUrl: authUrl.toString() }),
@@ -61,7 +71,15 @@ Deno.serve(async (req) => {
     if (action === 'exchangeCode') {
       const clientId = Deno.env.get('YOUTUBE_CLIENT_ID')
       const clientSecret = Deno.env.get('YOUTUBE_CLIENT_SECRET')
-      const redirectUri = `${req.headers.get('origin')}/auth/youtube/callback`
+      
+      if (!clientId || !clientSecret) {
+        console.error('Missing YouTube OAuth credentials')
+        throw new Error('YouTube OAuth credentials are not properly configured')
+      }
+
+      const redirectUri = `${req.headers.get('origin') || 'http://localhost:3000'}/auth/youtube/callback`
+
+      console.log('Exchanging code for tokens:', { code, redirectUri })
 
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -70,8 +88,8 @@ Deno.serve(async (req) => {
         },
         body: new URLSearchParams({
           code,
-          client_id: clientId || '',
-          client_secret: clientSecret || '',
+          client_id: clientId,
+          client_secret: clientSecret,
           redirect_uri: redirectUri,
           grant_type: 'authorization_code',
         }),
@@ -80,8 +98,11 @@ Deno.serve(async (req) => {
       const tokenData: YouTubeTokenResponse = await tokenResponse.json()
 
       if (!tokenResponse.ok) {
+        console.error('Token exchange failed:', tokenData)
         throw new Error(`Token exchange failed: ${JSON.stringify(tokenData)}`)
       }
+
+      console.log('Token exchange successful, fetching channel info')
 
       // Get channel info
       const channelResponse = await fetch(
@@ -95,6 +116,8 @@ Deno.serve(async (req) => {
 
       const channelData = await channelResponse.json()
       const channel = channelData.items?.[0]
+
+      console.log('Channel data retrieved:', channel?.snippet?.title)
 
       // Store connection in database
       const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000)
@@ -134,6 +157,7 @@ Deno.serve(async (req) => {
         .eq('user_id', user.id)
 
       if (error) {
+        console.error('Disconnect error:', error)
         throw new Error('Failed to disconnect YouTube account')
       }
 
