@@ -2,7 +2,8 @@
 import { useYouTubeAuth } from "@/hooks/useYouTubeAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Youtube, CheckCircle, Loader2, ExternalLink } from "lucide-react";
+import { Youtube, CheckCircle, Loader2, ExternalLink, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface YouTubeAuthProps {
   onAuthSuccess?: (connection: any) => void;
@@ -76,6 +77,14 @@ const YouTubeAuth = ({ onAuthSuccess }: YouTubeAuthProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <Alert className="border-amber-500/50 bg-amber-500/10">
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="text-amber-200">
+            Setup required: Please configure your Google OAuth Client ID in the code. 
+            Check the browser console for detailed instructions after clicking "Connect".
+          </AlertDescription>
+        </Alert>
+
         <p className="text-muted-foreground">
           Connect your YouTube account to automatically upload videos directly from this platform.
         </p>
@@ -97,6 +106,16 @@ const YouTubeAuth = ({ onAuthSuccess }: YouTubeAuthProps) => {
             </>
           )}
         </Button>
+
+        <div className="text-xs text-muted-foreground space-y-1">
+          <p>To set this up:</p>
+          <ol className="list-decimal list-inside space-y-1 ml-2">
+            <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Google Cloud Console</a></li>
+            <li>Create an OAuth 2.0 Client ID</li>
+            <li>Configure authorized origins and redirect URIs</li>
+            <li>Replace the client ID in the code</li>
+          </ol>
+        </div>
       </CardContent>
     </Card>
   );

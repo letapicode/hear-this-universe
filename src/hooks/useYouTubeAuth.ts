@@ -11,7 +11,9 @@ export interface YouTubeConnection {
   connected_at: string;
 }
 
-const YOUTUBE_CLIENT_ID = '1076737978848-8qm9d9vgmo8s8o0a7dfhvpj5l5o7k9nm.apps.googleusercontent.com'; // You'll need to replace this with your actual client ID
+// You need to replace this with your actual Google OAuth Client ID
+// Get it from: https://console.cloud.google.com/apis/credentials
+const YOUTUBE_CLIENT_ID = 'YOUR_GOOGLE_OAUTH_CLIENT_ID_HERE';
 
 export const useYouTubeAuth = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -24,9 +26,13 @@ export const useYouTubeAuth = () => {
 
   const checkConnection = async () => {
     try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+
       const { data, error } = await supabase
         .from('youtube_connections')
         .select('*')
+        .eq('user_id', user.user.id)
         .single();
 
       if (data && !error) {
@@ -44,6 +50,28 @@ export const useYouTubeAuth = () => {
   };
 
   const startAuth = async () => {
+    if (YOUTUBE_CLIENT_ID === 'YOUR_GOOGLE_OAUTH_CLIENT_ID_HERE') {
+      toast.error('Please configure your Google OAuth Client ID first. Check the console for instructions.');
+      console.error(`
+🔧 YouTube Setup Required:
+
+1. Go to: https://console.cloud.google.com/apis/credentials
+2. Create a new OAuth 2.0 Client ID (Web application)
+3. Add these to "Authorized JavaScript origins":
+   - ${window.location.origin}
+   - http://localhost:3000 (for local development)
+4. Add these to "Authorized redirect URIs":
+   - ${window.location.origin}/auth/youtube/callback
+   - http://localhost:3000/auth/youtube/callback (for local development)
+5. Copy your Client ID and replace 'YOUR_GOOGLE_OAUTH_CLIENT_ID_HERE' in src/hooks/useYouTubeAuth.ts
+
+Also enable these APIs in Google Cloud Console:
+- YouTube Data API v3
+- YouTube Analytics API (optional)
+      `);
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Create OAuth URL
@@ -64,8 +92,16 @@ export const useYouTubeAuth = () => {
         'width=500,height=600,scrollbars=yes,resizable=yes'
       );
 
+      if (!popup) {
+        toast.error('Popup blocked! Please allow popups for this site.');
+        setIsLoading(false);
+        return;
+      }
+
       // Listen for the popup to send us the auth code
       const handleMessage = async (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+
         if (event.data?.type === 'youtube-auth-success') {
           window.removeEventListener('message', handleMessage);
           popup?.close();
@@ -73,7 +109,7 @@ export const useYouTubeAuth = () => {
         } else if (event.data?.type === 'youtube-auth-error') {
           window.removeEventListener('message', handleMessage);
           popup?.close();
-          toast.error('YouTube authentication failed');
+          toast.error('YouTube authentication failed: ' + (event.data.error || 'Unknown error'));
           setIsLoading(false);
         }
       };
@@ -86,6 +122,7 @@ export const useYouTubeAuth = () => {
           clearInterval(checkClosed);
           window.removeEventListener('message', handleMessage);
           setIsLoading(false);
+          toast.error('Authentication cancelled');
         }
       }, 1000);
 
@@ -98,7 +135,13 @@ export const useYouTubeAuth = () => {
 
   const handleAuthCallback = async (code: string) => {
     try {
-      // Exchange code for tokens using Google's token endpoint
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Exchange code for tokens using a simple fetch (this is frontend-only approach)
+      // Note: In production, you might want to use a backend service for security
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
@@ -107,14 +150,15 @@ export const useYouTubeAuth = () => {
         body: new URLSearchParams({
           code,
           client_id: YOUTUBE_CLIENT_ID,
-          client_secret: '', // We'll handle this differently - see note below
+          // Note: For security, you should use PKCE flow instead of client_secret in frontend
           redirect_uri: `${window.location.origin}/auth/youtube/callback`,
           grant_type: 'authorization_code',
         }),
       });
 
       if (!tokenResponse.ok) {
-        throw new Error('Failed to exchange code for tokens');
+        const errorData = await tokenResponse.json();
+        throw new Error(`Failed to exchange code for tokens: ${errorData.error_description || errorData.error}`);
       }
 
       const tokenData = await tokenResponse.json();
@@ -136,27 +180,31 @@ export const useYouTubeAuth = () => {
       const channelData = await channelResponse.json();
       const channel = channelData.items?.[0];
 
+      if (!channel) {
+        throw new Error('No YouTube channel found for this account');
+      }
+
       // Store connection in database
       const { error: dbError } = await supabase
         .from('youtube_connections')
         .upsert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
+          user_id: user.user.id,
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           token_expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
-          channel_id: channel?.id,
-          channel_name: channel?.snippet?.title,
+          channel_id: channel.id,
+          channel_name: channel.snippet.title,
         });
 
       if (dbError) {
-        throw new Error('Failed to store YouTube connection');
+        throw new Error('Failed to store YouTube connection: ' + dbError.message);
       }
 
       await checkConnection();
-      toast.success('Successfully connected to YouTube!');
+      toast.success(`Successfully connected to YouTube channel: ${channel.snippet.title}`);
     } catch (error) {
       console.error('Error handling auth callback:', error);
-      toast.error('Failed to connect to YouTube');
+      toast.error('Failed to connect to YouTube: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
@@ -165,13 +213,18 @@ export const useYouTubeAuth = () => {
   const disconnect = async () => {
     setIsLoading(true);
     try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        throw new Error('User not authenticated');
+      }
+
       const { error } = await supabase
         .from('youtube_connections')
         .delete()
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', user.user.id);
 
       if (error) {
-        throw new Error('Failed to disconnect YouTube account');
+        throw new Error('Failed to disconnect YouTube account: ' + error.message);
       }
 
       setConnection(null);
@@ -179,7 +232,7 @@ export const useYouTubeAuth = () => {
       toast.success('Disconnected from YouTube');
     } catch (error) {
       console.error('Error disconnecting YouTube:', error);
-      toast.error('Failed to disconnect from YouTube');
+      toast.error('Failed to disconnect from YouTube: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
